@@ -10,6 +10,7 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { cargarConfig } from './config.js';
+import { anotacionGithub, leerSecretos } from './entorno.js';
 import { crearHttp } from './http.js';
 import { ejecutarModo } from './motor.js';
 import { imprimirInforme } from './report.js';
@@ -45,11 +46,14 @@ async function main() {
   cargarEnvLocal();
 
   const config = cargarConfig();
-  const store = await crearStore({ dryRun });
-  const telegramReal = crearTelegram({ token: process.env.TELEGRAM_BOT_TOKEN, chatId: process.env.TELEGRAM_CHAT_ID });
-  if (!dryRun && !telegramReal) throw new Error('Faltan TELEGRAM_BOT_TOKEN o TELEGRAM_CHAT_ID.');
+  const secretos = leerSecretos();
+  for (const p of secretos.problemas) avisoGithub('error', p);
+  if (modo === 'prueba') return prueba({ secretos, dryRun });
+  if (!dryRun && secretos.problemas.length) throw new Error(secretos.problemas.join(' · '));
 
-  if (modo === 'prueba') return prueba({ store, telegram: telegramReal, dryRun });
+  const store = await crearStore({ dryRun, credenciales: secretos.firebase });
+  const telegramReal = crearTelegram({ token: secretos.token, chatId: secretos.chatId });
+  if (!dryRun && !telegramReal) throw new Error('Faltan los secrets TELEGRAM_BOT_TOKEN o TELEGRAM_CHAT_ID.');
 
   if (modo === 'limpieza') {
     // La limpieza de verdad (borrar lo de más de 30 días) llega en la fase 6.
@@ -72,21 +76,56 @@ async function main() {
   imprimirInforme(salida, { dryRun, todos: values.todos });
 }
 
-async function prueba({ store, telegram, dryRun }) {
-  const g = await store.leerGlobal();
-  log.info(`✔ Firestore (${store.tipo}${store.proyecto ? `, proyecto ${store.proyecto}` : ''}): leído estado/_global (${Object.keys(g).length} campos)`);
-  if (!telegram) {
-    log.aviso('Telegram sin configurar (faltan TELEGRAM_BOT_TOKEN o TELEGRAM_CHAT_ID).');
-    return;
+/** Comprueba cada pieza por separado y dice exactamente cuál falla (sin enseñar ninguna clave). */
+async function prueba({ secretos, dryRun }) {
+  const fallos = [];
+  const paso = async (nombre, fn) => {
+    try {
+      const r = await fn();
+      log.info(`✔ ${nombre}${r ? `: ${r}` : ''}`);
+      return true;
+    } catch (e) {
+      fallos.push(`${nombre}: ${e.message}`);
+      log.error(`${nombre}: ${e.message}`);
+      avisoGithub('error', `${nombre}: ${e.message}`);
+      return false;
+    }
+  };
+  for (const p of secretos.problemas) fallos.push(p);
+
+  if (!secretos.hayFirebase) fallos.push('Falta el secret FIREBASE_SERVICE_ACCOUNT.');
+  else if (secretos.firebase) {
+    await paso('Firebase', async () => {
+      const store = await crearStore({ dryRun: true, credenciales: secretos.firebase });
+      await store.leerGlobal();
+      return `conecta con el proyecto ${secretos.firebase.project_id}`;
+    });
   }
-  const bot = await telegram.quienSoy();
-  log.info(`✔ Telegram: el token es del bot @${bot}`);
-  if (dryRun) return log.info('(dry-run: no envío el mensaje de prueba)');
-  await telegram.enviarTexto('✅ <b>Cazachollos está conectado.</b>\nFirestore y Telegram funcionan. A partir de ahora solo te escribiré cuando haya algo bestia.');
-  log.info('✔ Mensaje de prueba enviado. Mira tu Telegram.');
+
+  if (!process.env.TELEGRAM_BOT_TOKEN?.trim()) fallos.push('Falta el secret TELEGRAM_BOT_TOKEN.');
+  if (!process.env.TELEGRAM_CHAT_ID?.trim()) fallos.push('Falta el secret TELEGRAM_CHAT_ID.');
+  const telegram = crearTelegram({ token: secretos.token, chatId: secretos.chatId });
+  if (secretos.token) {
+    const tg = crearTelegram({ token: secretos.token, chatId: secretos.chatId ?? '0' });
+    await paso('Token de Telegram', async () => `es del bot @${await tg.quienSoy()}`);
+  }
+  if (telegram && !dryRun) {
+    await paso('Mensaje de prueba', async () => {
+      await telegram.enviarTexto('✅ <b>Cazachollos está conectado.</b>\nFirestore y Telegram funcionan. A partir de ahora solo te escribiré cuando haya algo bestia.');
+      return 'enviado, mira tu Telegram';
+    });
+  }
+
+  if (fallos.length) throw new Error(`La prueba ha fallado (${fallos.length}): ${fallos.join(' · ')}`);
+  log.info(dryRun ? '(dry-run: no envío el mensaje de prueba)' : '✔ Todo conectado.');
+}
+
+function avisoGithub(nivel, mensaje) {
+  if (process.env.GITHUB_ACTIONS === 'true') console.log(anotacionGithub(nivel, mensaje));
 }
 
 main().catch((e) => {
   log.error(e.message);
+  avisoGithub('error', e.message);
   process.exitCode = 1;
 });

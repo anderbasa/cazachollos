@@ -1,19 +1,12 @@
 // Almacén en Firestore (firebase-admin con cuenta de servicio). Misma interfaz que memoria.js.
 // Las escrituras de estado usan "merge" por campo, así dos ejecuciones de modos distintos que
 // coinciden en el tiempo no se pisan. Los avisos se reclaman con transacción: nunca dos veces.
-import { readFileSync } from 'node:fs';
+// Las credenciales se leen y comprueban en src/entorno.js (sin revelarlas nunca en los logs).
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { FieldValue, getFirestore, Timestamp } from 'firebase-admin/firestore';
 
 const CAMPOS_FECHA = new Set(['publicadoEn', 'vistoEn', 'actualizadoEn', 'notificadoEn', 'inicio', 'fin', 'ultimaEjecucion', 'ultimaOk', 'ultimoFallo', 'fallandoDesde']);
 const NOMBRE_APP = 'cazachollos';
-
-/** Lee la cuenta de servicio de FIREBASE_SERVICE_ACCOUNT (JSON) o FIREBASE_SERVICE_ACCOUNT_FILE (ruta). */
-export function credencialesFirebase(env = process.env) {
-  if (env.FIREBASE_SERVICE_ACCOUNT?.trim()) return JSON.parse(env.FIREBASE_SERVICE_ACCOUNT);
-  if (env.FIREBASE_SERVICE_ACCOUNT_FILE?.trim()) return JSON.parse(readFileSync(env.FIREBASE_SERVICE_ACCOUNT_FILE, 'utf8'));
-  return null;
-}
 
 const aTs = (v) => (v == null ? null : v instanceof Timestamp ? v : Timestamp.fromMillis(typeof v === 'number' ? v : Date.parse(v)));
 const aMs = (v) => (v == null ? null : typeof v?.toMillis === 'function' ? v.toMillis() : typeof v === 'number' ? v : Date.parse(v));
