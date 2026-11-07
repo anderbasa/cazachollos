@@ -31,6 +31,10 @@ pegues en ningún sitio distinto del que dice la guía. El repositorio será pú
    `https://api.telegram.org/botTU_TOKEN/getUpdates`
 4. Verás un texto como `{"ok":true,"result":[{"update_id":...,"message":{..."chat":{"id":987654321,...`
    El número que va justo después de `"chat":{"id":` es tu **chat_id** (clave 2). Cópialo.
+   - Pulsa Ctrl+F y busca `"chat":{"id":` para encontrarlo. Ahí salen varios números parecidos
+     (`update_id`, `message_id`…): solo vale el de `"chat"`, que es igual al de `"from":{"id":`.
+   - Si coincide con el principio del token (lo que va antes de `:`), **no es ese**: es el del bot.
+     Con ese número, la prueba del paso 5 da "chat not found".
    - Si ves `"result":[]`, escribe otro mensaje al bot y recarga la página.
    - Si ves `"ok":false`, el token está mal copiado.
 
@@ -99,6 +103,9 @@ es normal y se arregla solo en cuanto pongas los secrets).
 | `TELEGRAM_CHAT_ID` | El número del paso 1.2 (solo el número; si lleva un `-` delante, inclúyelo) |
 | `FIREBASE_SERVICE_ACCOUNT` | **Todo** el contenido del archivo `firebase.json`: ábrelo con el Bloc de notas, pulsa Ctrl+A y luego Ctrl+C, y pégalo. Empieza por `{` y acaba por `}` |
 
+Ojo con el portapapeles: si copias el nombre (`FIREBASE_SERVICE_ACCOUNT`) después de copiar la
+clave, al pegar en "Secret" pegarás el nombre. Escribe los nombres a mano y pega solo el contenido.
+
 ---
 
 ## Paso 5 · Primera prueba (2 min)
@@ -108,8 +115,11 @@ es normal y se arregla solo en cuanto pongas los secrets).
 3. A la derecha, pulsa **Run workflow** → en "Qué ejecutar" elige `prueba` → **Run workflow**.
 4. Al minuto o así debería salir un ✅ verde y llegarte a Telegram el mensaje
    **"Cazachollos está conectado"**.
-   - Si sale una ❌ roja, entra en la ejecución y mira el último paso, "Cazachollos": dice qué
-     falla (por ejemplo "Faltan TELEGRAM_BOT_TOKEN"). Normalmente es un secret mal copiado.
+   - Si sale una ❌ roja, entra en la ejecución: en el apartado **Annotations** sale qué secret
+     falla y por qué (sin enseñar su contenido). Por ejemplo, "FIREBASE_SERVICE_ACCOUNT no es un
+     JSON válido… NO empieza por {" o "chat not found" (chat_id equivocado, ver paso 1.2).
+     Corrige el secret con el lápiz ✏️ y lanza otra vez con **Run workflow**: "Re-run" repite
+     el código antiguo.
 5. Repite con `rapido`. Esta primera vez **no te avisará de nada a propósito**: es la "siembra",
    que guarda lo que hay ahora para no mandarte de golpe todo lo de las últimas horas. En Firebase →
    Firestore Database deberías ver aparecer las colecciones `deals`, `estado` y `ejecuciones`.
@@ -132,53 +142,74 @@ cron-job.org (gratis). El de GitHub queda como respaldo.
    calendario con un recordatorio una semana antes:** ese día tendrás que crear otro y cambiarlo
    en cron-job.org. Si no, el bot dejará de funcionar sin avisar (solo quedaría el respaldo de GitHub).
 4. **Repository access:** **Only select repositories** → elige `anderbasa/cazachollos`.
-5. **Permissions** → **Repository permissions** → busca **Actions** → **Read and write**.
+5. **Permissions** → **Repository permissions** → busca **Actions** → **Read and write**
+   (en la versión nueva: **+ Add permissions** → Actions → Read and write).
    No toques nada más; "Metadata: Read-only" se añade sola.
 6. Pulsa **Generate token** y copia el token (empieza por `github_pat_`). **Solo se ve una vez.**
    Este token vive solo en cron-job.org: no hace falta guardarlo en ningún otro sitio.
 
-**6.2 · Cuenta en cron-job.org**
+Si luego cron-job.org da **403**, casi seguro es este permiso: en
+https://github.com/settings/personal-access-tokens abre el token → **Edit** → pon Actions en
+**Read and write** → **Update**. El token sigue siendo el mismo; no hay que tocar cron-job.org.
 
-1. Entra en https://cron-job.org → **Sign up**, crea la cuenta (gratis) y confirma el correo.
-2. En **Settings** (tu cuenta), pon la zona horaria `Europe/Madrid`.
+**6.2 · Cuenta en cron-job.org** (los nombres son los de la web en castellano)
 
-**6.3 · Crear los 4 trabajos**
+1. Entra en https://cron-job.org → **Registrarse**, crea la cuenta (gratis) y confirma el correo.
 
-Pulsa **Create cronjob** y rellena:
+**6.3 · El primer trabajo**
 
-- **Title:** `Cazachollos rápido`
+**Cronjobs** → **Crear cronjob**.
+
+Pestaña **Común**:
+- **Título:** `Cazachollos rápido`
 - **URL:** `https://api.github.com/repos/anderbasa/cazachollos/actions/workflows/ejecutar.yml/dispatches`
-- **Execution schedule:** cada 10 minutos (Every 10 minutes)
-- Abre la pestaña **Advanced**:
-  - **Request method:** `POST`
-  - **Request headers:** añade estas 4 cabeceras (Key → Value):
-    - `Authorization` → `Bearer github_pat_...` (la palabra `Bearer`, un espacio y tu token)
-    - `Accept` → `application/vnd.github+json`
-    - `X-GitHub-Api-Version` → `2022-11-28`
-    - `Content-Type` → `application/json`
-  - **Request body:** `{"ref":"main","inputs":{"modo":"rapido"}}`
-- **Notifications:** activa que te avise por correo si falla.
-- Guarda (**Create**).
+- **Habilitar job:** activado.
+- **Horario de ejecución:** **Cada 10 minutos**.
+- **Notificaciones** → marca **cuando la ejecución del cronjob falle**.
 
-Luego crea otros tres iguales (si ves la opción de copiar o duplicar, úsala) cambiando solo el
-título, la frecuencia y la palabra del modo en el body:
+Pestaña **Avanzado**:
+- **Zona horaria:** `Europe/Madrid`
+- **Encabezados** (Clave → Valor), cuatro:
+  - `Authorization` → `Bearer github_pat_...` (la palabra `Bearer`, un espacio y tu token)
+  - `Accept` → `application/vnd.github+json`
+  - `X-GitHub-Api-Version` → `2022-11-28`
+  - `Content-Type` → `application/json` (si sale el aviso «¿Enviar datos JSON?», el botón
+    «Agregar encabezado Content-Type ahora» lo añade solo)
+- **Método de solicitud:** `POST`
+- **Cuerpo de la solicitud:** `{"ref":"main","inputs":{"modo":"rapido"}}`
 
-| Title | Frecuencia | Request body |
+Pulsa **Crear** (o **Guardar**).
+
+**6.4 · Los otros tres: con «Clonar»**
+
+En la lista, menú `⋯` del trabajo rápido → **Clonar** → **Editar** la copia y cambia solo el
+título, el horario y la palabra del modo en el cuerpo:
+
+| Título | Horario de ejecución | Cuerpo de la solicitud |
 |---|---|---|
-| `Cazachollos lento` | Cada hora | `{"ref":"main","inputs":{"modo":"lento"}}` |
+| `Cazachollos lento` | Cada 1 hora | `{"ref":"main","inputs":{"modo":"lento"}}` |
 | `Cazachollos búsqueda` | Cada 6 horas | `{"ref":"main","inputs":{"modo":"busqueda"}}` |
-| `Cazachollos limpieza` | Cada día a las 04:30 | `{"ref":"main","inputs":{"modo":"limpieza"}}` |
+| `Cazachollos limpieza` | Todos los días a las 04:30 | `{"ref":"main","inputs":{"modo":"limpieza"}}` |
 
-**6.4 · Comprobar**
+**6.5 · Comprobar**
 
-En cada trabajo, pulsa **Test run** (o "Run now"). Tiene que responder **204** (sin contenido);
-eso significa que GitHub ha aceptado la orden. En la pestaña Actions del repo verás aparecer la
-ejecución.
+En cada trabajo: **Ejecución de prueba** → **Iniciar ejecución de prueba**. La **Respuesta** tiene
+que ser **204** (GitHub ha aceptado la orden) y en la pestaña Actions del repo aparece la ejecución.
 
 - **401:** el token está mal copiado o falta la palabra `Bearer `.
-- **403:** el token no tiene permiso de Actions (Read and write).
+- **403:** el token no tiene permiso de Actions (Read and write); ver el final de 6.1.
+  El **Cuerpo de respuesta** lo confirma: «Resource not accessible by personal access token».
 - **404:** la URL está mal escrita, o el token no tiene acceso al repositorio `cazachollos`.
-- **422:** el body está mal escrito (revisa comillas y llaves).
+- **422:** el cuerpo de la solicitud está mal escrito (revisa comillas y llaves).
+
+---
+
+## Cuando caduque el token de GitHub (una vez al año)
+
+1. Crea uno nuevo igual que en 6.1 (o en el token viejo, **Regenerate token**).
+2. En cron-job.org, en **cada uno de los 4 trabajos**: **Editar** → **Avanzado** → encabezado
+   `Authorization` → pon `Bearer ` + el token nuevo → **Guardar**.
+3. Haz una **Ejecución de prueba** en uno: tiene que salir 204.
 
 ---
 

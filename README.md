@@ -5,8 +5,8 @@ Busca chollos 24/7 y avisa por Telegram **solo** cuando aparece algo bestia.
 - **Chollo** → entra en la web, para curiosear.
 - **Chollazo** → además llega a Telegram. Tiene que ser raro.
 
-> Estado: **fase 2 de 6**: guarda en Firestore, avisa por Telegram y se ejecuta en GitHub Actions
-> (cron-job.org como despertador). Para ponerlo en marcha, sigue **[GUIA.md](GUIA.md)**.
+> Estado: **fase 2 de 6, en marcha**: guarda en Firestore, avisa por Telegram y se ejecuta en GitHub
+> Actions (cron-job.org como despertador). Puesta en marcha paso a paso: **[GUIA.md](GUIA.md)**.
 > El esquema de datos está en [DATA.md](DATA.md).
 
 ## Cómo funciona
@@ -82,7 +82,7 @@ de `crearDeal({...})`, y añade una entrada en `fuentes:` de `config.yml`.
 ## Fases
 
 1. ✅ Base: estructura, config, modelo, puntuador y Chollometro en dry-run
-2. 🔧 Avisos: Firestore, bot de Telegram, deduplicación, GitHub Actions y cron-job.org (código listo; falta ponerlo en marcha con GUIA.md)
+2. ✅ Avisos: Firestore, bot de Telegram, deduplicación, GitHub Actions y cron-job.org (en marcha desde el 7/11/2026)
 3. Más fuentes: canales de Telegram y GamerPower
 4. Web (PWA): login, feed, filtros, ajustes y estado
 5. Búsquedas web: Tavily con límites duros
