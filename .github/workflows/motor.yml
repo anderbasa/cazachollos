@@ -1,0 +1,59 @@
+# Lógica común: la llaman ejecutar.yml (cron-job.org) y respaldo.yml (schedule de GitHub).
+# OJO: el repo es público y estos logs también. El script nunca imprime claves ni el chat_id,
+# y GitHub además tapa con *** cualquier secret que apareciera.
+name: Motor
+
+on:
+  workflow_call:
+    inputs:
+      modo:
+        type: string
+        required: true
+      respaldo:
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  ejecutar:
+    name: ${{ inputs.modo }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Dos ejecuciones del mismo modo nunca a la vez (la segunda espera)
+    concurrency:
+      group: cazachollos-${{ inputs.modo }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      actions: write # solo para reactivar el respaldo en la limpieza diaria
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci --omit=dev --no-audit --no-fund
+
+      - name: Cazachollos
+        run: node src/main.js --modo "$MODO" $RESPALDO
+        env:
+          MODO: ${{ inputs.modo }}
+          RESPALDO: ${{ inputs.respaldo && '--respaldo' || '' }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+
+      # GitHub desactiva los "schedule" de los repos públicos tras 60 días sin actividad.
+      # La limpieza diaria (lanzada por cron-job.org) vuelve a activar el respaldo por si acaso.
+      - name: Mantener activo el respaldo
+        if: inputs.modo == 'limpieza' && !inputs.respaldo
+        run: gh api --method PUT "repos/$GITHUB_REPOSITORY/actions/workflows/respaldo.yml/enable" --silent
+        env:
+          GH_TOKEN: ${{ github.token }}

@@ -1,0 +1,27 @@
+# Disparador principal. Lo llama cron-job.org con:
+#   POST https://api.github.com/repos/<usuario>/cazachollos/actions/workflows/ejecutar.yml/dispatches
+#   {"ref":"main","inputs":{"modo":"rapido"}}
+# También se puede lanzar a mano desde la pestaña Actions → Cazachollos → Run workflow.
+# No tiene "schedule", así que GitHub nunca lo desactiva por inactividad.
+name: Cazachollos
+run-name: ${{ inputs.modo }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      modo:
+        description: Qué ejecutar
+        type: choice
+        options: [rapido, lento, busqueda, limpieza, prueba]
+        default: rapido
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  motor:
+    uses: ./.github/workflows/motor.yml
+    with:
+      modo: ${{ inputs.modo }}
+    secrets: inherit

@@ -1,0 +1,172 @@
+# Cazachollos · configuración por defecto
+#
+# Todo lo que hay bajo "umbrales" se podrá editar desde la web (pantalla Ajustes),
+# que lo guarda en Firestore (config/umbrales). Si ese documento no existe, se usa esto.
+# Este repo es público: aquí nunca van claves ni datos personales.
+
+zona_horaria: Europe/Madrid
+
+http:
+  # User-Agent realista y fijo (siempre el mismo)
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+  timeout_segundos: 20
+  pausa_entre_peticiones_ms: 2500 # entre dos peticiones a la misma web
+  reintentos: 2 # con espera creciente; ante 429/403 se espera más
+
+umbrales:
+  # Descuento mínimo (%) para entrar en la web, calculado con precio + envío.
+  # Moda y otros estaban en 60 y 70 en el documento; se bajan a 50 para que nada
+  # pueda avisar por Telegram sin aparecer en la web.
+  web:
+    tecnologia: 40
+    videojuegos: 50
+    hogar: 40
+    moda: 50
+    otros: 50
+  # Sin precio anterior, un chollo entra en la web si llega a esta temperatura.
+  web_temperatura_minima: 300
+
+  # Descuento mínimo (%) para avisar por Telegram…
+  aviso:
+    tecnologia: 50
+    videojuegos: 50
+    hogar: 50
+    moda: 50
+    otros: 50
+  # …y además la comunidad tiene que validarlo (basta con una de las dos):
+  votos:
+    temperatura: 300 # grados en Chollometro (más o menos lo que hace falta para salir en destacados)
+    velocidad: 10 # o grados por minuto desde que se publicó…
+    velocidad_temperatura_minima: 100 # …con al menos estos grados (unos pocos votos no bastan)…
+    minutos_minimos: 10 # …y llevando ya estos minutos publicado
+
+  # Siempre avisa, sea cual sea el descuento (salvo que lo impida una regla de "nunca"):
+  siempre:
+    error_de_precio: true # "error de precio" en Chollometro
+    gratis: true # precio 0 € verificado (no cuenta "gratis con compra" ni pruebas de un mes)
+    juegos_gratis: true # juego gratis: avisa aunque valga menos del precio original mínimo
+    temperatura_rapida: # temperatura muy alta en poco tiempo
+      - { grados: 1000, minutos: 120 }
+      - { grados: 300, minutos: 30 }
+
+  # Nunca avisa:
+  nunca:
+    precio_original_minimo: 15 # € (evita "-90 % en un cable de 2 €")
+    locales: true # chollos solo en tiendas físicas o zonas concretas
+
+  # Antispam
+  avisos:
+    max_por_ejecucion: 10 # lo que sobre va en un único mensaje resumen
+    max_por_dia: 40 # al llegar aquí, un aviso de "tope" y el resto solo a la web
+    rebaja_minima_pct: 5 # vuelve a avisar de un chollo ya avisado si baja al menos esto
+
+  # Horas de silencio (Europe/Madrid). Los errores de precio y lo gratis se las saltan.
+  silencio:
+    activo: false
+    desde: "23:00"
+    hasta: "08:00"
+
+  # Juegos gratis (GamerPower)
+  juegos:
+    plataformas: [steam, epic-games-store, gog]
+    avisar_tipos: [game] # juego completo gratis = chollazo
+    web_tipos: [game, loot, beta] # loot y DLC solo a la web
+
+# Modos de ejecución. El disparador principal es cron-job.org; el "schedule" de GitHub
+# es solo un respaldo y no hace nada si el modo se ejecutó hace poco.
+modos:
+  rapido: { respaldo_si_mas_de_min: 15 } # cron-job.org: cada 10 min
+  lento: { respaldo_si_mas_de_min: 75 } # cada hora
+  busqueda: { respaldo_si_mas_de_min: 420 } # cada 6 horas
+  limpieza: { respaldo_si_mas_de_min: 1560 } # una vez al día
+
+# Estado y salud de las fuentes
+estado:
+  olvidar_tras_horas: 72 # deja de seguir un chollo que no aparece en ningún listado desde hace esto
+  alerta_tras_fallos: 3 # un único aviso de "la fuente X falla" tras estos fallos seguidos
+  desactivar_tras_bloqueos: 3 # si nos bloquea (403/429) tantas veces seguidas, se desactiva y avisa
+
+categorias:
+  nombres:
+    tecnologia: Tecnología e informática
+    videojuegos: Videojuegos y juegos gratis
+    hogar: Hogar y electrodomésticos
+    moda: Moda y deporte
+    otros: Otros
+  # Categoría de la fuente → una de las cinco. Lo que no esté aquí va a "otros".
+  # Las claves se comparan en minúsculas, sin tildes y con guiones.
+  chollometro:
+    electronica: tecnologia
+    telecomunicaciones: tecnologia
+    tarifas-de-internet: tecnologia
+    consolas-y-videojuegos: videojuegos
+    gaming: videojuegos
+    hogar-y-jardin: hogar
+    hogar-vivienda-y-oficina: hogar
+    jardin-y-bricolaje: hogar
+    moda-y-accesorios: moda
+    deportes-y-ejercicio: moda
+    deportes-y-aire-libre: moda
+
+# Fuentes. Cada una es un módulo de src/sources/<modulo>.js con la misma interfaz
+# (fetch → lista de chollos). Para añadir otra: crea el módulo y añade aquí una entrada.
+fuentes:
+  chollometro:
+    nombre: Chollometro
+    modulo: chollometro
+    activa: true
+    # Página de listado (trae precio anterior, envío y temperatura en JSON);
+    # si falla, se usa su RSS, que trae menos datos.
+    listados:
+      - nombre: nuevos
+        modos: [rapido]
+        html: https://www.chollometro.com/nuevos
+        rss: https://www.chollometro.com/rss/nuevos
+      - nombre: subiendo
+        modos: [rapido]
+        html: https://www.chollometro.com/subiendo
+        rss: https://www.chollometro.com/rss/subiendo
+      - nombre: gratis
+        modos: [lento]
+        html: https://www.chollometro.com/categorias/gratis
+        rss: https://www.chollometro.com/rss/categorias/gratis
+
+  # Plantilla para otra web española de chollos con RSS (desactivada; comprueba la URL antes):
+  # otra-web:
+  #   modulo: rss
+  #   activa: false
+  #   modos: [rapido]
+  #   url: https://ejemplo.invalid/rss
+  #   categoria: otros
+
+  telegram:
+    nombre: Telegram
+    modulo: telegram # fase 3
+    activa: false
+    modos: [rapido]
+    # Vista web pública https://t.me/s/<canal>. "fiable: true" permite avisar
+    # de lo que no se pueda verificar en Chollometro.
+    canales:
+      - { canal: chollos, fiable: false } # red Chollometro
+      - { canal: descuentos, fiable: false } # red Chollometro
+      - { canal: chollometro, fiable: false } # red Chollometro
+      - { canal: canaldechollos, fiable: false } # Michollo
+      - { canal: gangagato, fiable: false } # bot de Amazon, mucho volumen
+      - { canal: chollosgamers, fiable: false } # gaming
+
+  gamerpower:
+    nombre: GamerPower
+    modulo: gamerpower # fase 3
+    activa: false
+    modos: [lento]
+    url: https://www.gamerpower.com/api/giveaways
+
+  busqueda:
+    nombre: Búsqueda web
+    modulo: busqueda # fase 5; solo funciona si hay clave en los secrets
+    activa: false
+    modos: [busqueda]
+    proveedor: tavily
+    max_por_dia: 30
+    max_por_mes: 900
+    consultas: []

@@ -1,0 +1,21 @@
+{
+  "name": "cazachollos",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Busca chollos 24/7 y avisa por Telegram solo de los chollazos.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dry": "node src/main.js --modo rapido --dry-run",
+    "dry:lento": "node src/main.js --modo lento --dry-run",
+    "prueba": "node src/main.js --modo prueba --dry-run",
+    "test": "node --test \"test/**/*.test.js\""
+  },
+  "dependencies": {
+    "fast-xml-parser": "^5.12.0",
+    "firebase-admin": "^14.5.0",
+    "yaml": "^2.9.1"
+  }
+}

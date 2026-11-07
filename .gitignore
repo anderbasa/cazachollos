@@ -1,0 +1,9 @@
+node_modules/
+.env
+.env.*
+# Claves: nunca al repo (es público)
+*service-account*.json
+*serviceAccount*.json
+.secrets/
+*.local.*
+salida/

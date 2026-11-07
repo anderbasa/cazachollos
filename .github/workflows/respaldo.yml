@@ -1,0 +1,24 @@
+# Respaldo por si cron-job.org falla. El "schedule" de GitHub puede retrasarse mucho, así que
+# no es el disparador principal. Con --respaldo, el script no hace nada si ese modo se ejecutó
+# hace poco (ver "modos:" en config.yml), y la deduplicación evita avisos dobles.
+name: Respaldo
+run-name: respaldo
+
+on:
+  schedule:
+    - cron: '5,35 * * * *' # rápido
+    - cron: '50 * * * *' # lento
+    - cron: '25 2,8,14,20 * * *' # búsqueda
+    - cron: '15 5 * * *' # limpieza
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  motor:
+    uses: ./.github/workflows/motor.yml
+    with:
+      modo: ${{ github.event.schedule == '50 * * * *' && 'lento' || github.event.schedule == '25 2,8,14,20 * * *' && 'busqueda' || github.event.schedule == '15 5 * * *' && 'limpieza' || 'rapido' }}
+      respaldo: true
+    secrets: inherit
