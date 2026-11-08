@@ -8,7 +8,7 @@
 import { XMLParser } from 'fast-xml-parser';
 import { mapearCategoria } from '../config.js';
 import { crearDeal } from '../deal.js';
-import { detectarPalabras, parsePrecio } from '../text.js';
+import { detectarPalabras, detectarTipo, normalizarClave, parsePrecio } from '../text.js';
 
 const BASE = 'https://www.chollometro.com';
 const IMG = 'https://static.chollometro.com';
@@ -90,6 +90,7 @@ export function hiloADeal(t, { config, origen, ahora = Date.now() }) {
   // Precio 0 sin precio anterior ni "gratis" en el título = no tiene precio (recopilaciones, promos…)
   if (precio === 0 && precioAnterior == null && !etiquetas.has('GRATIS')) precio = null;
   if (precio === 0) etiquetas.add('GRATIS');
+  for (const e of etiquetasDeTipo(config, t.title, [grupo.threadGroupUrlName, grupo.threadGroupName], { precio, cupon: t.type === 'Voucher' })) etiquetas.add(e);
 
   const envio = t.shipping?.isFree ? 0 : t.shipping?.price > 0 ? t.shipping.price : null;
   const fin = typeof t.endDate === 'number' ? t.endDate : t.endDate?.timestamp;
@@ -126,6 +127,17 @@ export function hiloADeal(t, { config, origen, ahora = Date.now() }) {
       dominio: t.linkHost ?? null,
     },
   });
+}
+
+/** DIGITAL / RECOPILACION por el título, NO_FISICO por la categoría, CUPON si es un cupón de tienda. */
+export function etiquetasDeTipo(config, titulo, claves, { precio = null, cupon = false } = {}) {
+  const etiquetas = detectarTipo(titulo);
+  const noFisicas = new Set((config?.categorias?.chollometro_no_fisicas ?? []).map(normalizarClave));
+  if (claves.some((c) => c && noFisicas.has(normalizarClave(c)))) etiquetas.add('NO_FISICO');
+  if (cupon) etiquetas.add('CUPON');
+  // "Synonyms, MSafe - Pro, Evertale, Bricks Breaker…" gratis = lista de apps
+  if (precio === 0 && (titulo.match(/,/g) ?? []).length >= 3) etiquetas.add('RECOPILACION');
+  return etiquetas;
 }
 
 function urlImagen(img) {
@@ -165,6 +177,7 @@ export function parsearRss(texto, { config, origen = 'rss' } = {}) {
     let precio = parsePrecio(comercio.price);
     if (precio === 0 && !etiquetas.has('GRATIS')) precio = null;
     if (precio === 0) etiquetas.add('GRATIS');
+    for (const e of etiquetasDeTipo(config, String(it.title), [categoria], { precio })) etiquetas.add(e);
     const img = it['media:content']?.url ?? it['media:thumbnail']?.url ?? null;
     deals.push(
       crearDeal({

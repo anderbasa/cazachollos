@@ -1,8 +1,10 @@
 // Puntuador único: decide si un Deal entra en la web (chollo) y si avisa por Telegram (chollazo).
 //
 // Orden de las reglas:
-//   1. "nunca" (caducado, local, sin verificar, precio original bajo, el envío se come el descuento)
-//      gana siempre: si salta alguna, no se avisa.
+//   0. Filtros de interés (categoría activa, solo productos físicos, sin recopilaciones): si no
+//      pasa, no entra ni en la web ni en el bot.
+//   1. "nunca" (caducado, local, sin verificar, sin precio, precio original bajo, el envío se come
+//      el descuento) gana siempre: si salta alguna, no se avisa.
 //   2. "siempre" (error de precio, gratis verificado, temperatura muy alta en poco tiempo).
 //   3. Normal: descuento ≥ umbral de aviso de su categoría Y validación de la comunidad (votos).
 //
@@ -31,11 +33,22 @@ export function puntuar(deal, u, ahora = Date.now()) {
   const votos = porTemperatura || porVelocidad;
   const textoVotos = porTemperatura ? `${Math.round(T)}°` : porVelocidad ? `${velocidad.toFixed(1)}°/min` : '';
 
+  // 0 · Filtros de interés
+  const filtros = [];
+  if (u.categorias_activas && !u.categorias_activas.includes(cat)) filtros.push(`categoría ${cat} desactivada`);
+  if (u.solo_productos_fisicos) {
+    if (tags.has('DIGITAL')) filtros.push('no es un producto físico (digital)');
+    else if (tags.has('NO_FISICO')) filtros.push('no es un producto físico (servicio, viaje o tarifa)');
+    else if (tags.has('CUPON')) filtros.push('cupón genérico de tienda');
+  }
+  if (u.excluir_recopilaciones && tags.has('RECOPILACION')) filtros.push('recopilación de varios productos');
+
   // 1 · Nunca
-  const bloqueos = [];
+  const bloqueos = [...filtros];
   if (deal.caducado) bloqueos.push('caducado o agotado');
   if (u.nunca.locales && deal.local) bloqueos.push('solo en tiendas físicas o zonas concretas');
   if (!deal.verificado && !deal.fiable) bloqueos.push('sin verificar y la fuente no es fiable');
+  if (deal.precio == null && !errorPrecio) bloqueos.push('sin precio');
   const minimo = u.nunca.precio_original_minimo;
   if (deal.precioAnterior != null && deal.precioAnterior < minimo && !(juegoCompleto && u.siempre.juegos_gratis)) {
     bloqueos.push(`precio original menor de ${minimo} €`);
@@ -61,20 +74,22 @@ export function puntuar(deal, u, ahora = Date.now()) {
   }
 
   // 3 · Normal
-  const motivos = [...siempre];
+  const filtrado = filtros.length > 0;
+  const motivos = filtrado ? [] : [...siempre]; // lo filtrado no es "casi chollazo": no interesa
   const umbralAviso = u.aviso[cat] ?? u.aviso.otros;
   const porDescuento = d != null && d >= umbralAviso && votos;
-  if (porDescuento) motivos.push(`-${d} % con ${textoVotos}`);
+  if (porDescuento && !filtrado) motivos.push(`-${d} % con ${textoVotos}`);
 
   const esChollazo = bloqueos.length === 0 && motivos.length > 0;
 
   const umbralWeb = Math.min(u.web[cat] ?? u.web.otros, umbralAviso);
   const esChollo =
-    esChollazo ||
-    esGratis ||
-    errorPrecio ||
-    (d != null && d >= umbralWeb) ||
-    (T != null && T >= u.web_temperatura_minima);
+    !filtrado &&
+    (esChollazo ||
+      esGratis ||
+      errorPrecio ||
+      (d != null && d >= umbralWeb) ||
+      (T != null && T >= u.web_temperatura_minima));
 
   // Puntuación 0–100
   let p = 0;
@@ -92,6 +107,7 @@ export function puntuar(deal, u, ahora = Date.now()) {
     esChollo,
     esChollazo,
     gratis: esGratis,
+    filtrado, // no pasa los filtros de interés: ni web ni bot
     velocidad: velocidad == null ? null : Math.round(velocidad * 10) / 10,
     edadMinutos: edadMin == null ? null : Math.round(edadMin),
     motivos, // por qué es chollazo (o lo sería)

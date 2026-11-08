@@ -48,11 +48,12 @@ Firestore (sin escribir) y te enseña qué avisaría de verdad ahora mismo.
 
 | | Regla |
 |---|---|
-| Entra en la web | Descuento ≥ 40 % (tecnología, hogar) o ≥ 50 % (videojuegos, moda, otros), o gratis, o error de precio, o ≥ 300° |
+| Qué interesa | Moda y deporte, tecnología, hogar y bricolaje, salud y belleza. **Solo productos físicos**: fuera videojuegos, plugins, apps, cursos, suscripciones, viajes, tarifas, cupones genéricos y recopilaciones. Lo demás no entra ni en la web ni en el bot |
+| Entra en la web | Descuento ≥ 40 % (tecnología, hogar) o ≥ 50 % (moda, belleza), o gratis, o error de precio, o ≥ 300° |
 | Avisa por descuento | ≥ 50 % **y** la comunidad lo valida: ≥ 300°, o ≥ 10°/min con ≥ 100° |
 | Avisa siempre | Error de precio · gratis verificado · ≥ 1.000° en 2 h · ≥ 300° en 30 min |
-| Nunca avisa | Precio original < 15 € · el envío se come el descuento · caducado/agotado · solo local · sin verificar de fuente no fiable |
-| Antispam | 10 por ejecución, 40 al día; lo que sobra, en un único resumen |
+| Nunca avisa | Sin precio · precio original < 15 € · el envío se come el descuento · caducado/agotado · solo local · sin verificar de fuente no fiable |
+| Antispam | 10 por ejecución, 40 al día; lo que sobra, en un único resumen. Del mismo chollo, como mucho 3 mensajes: solo si baja otro 5 % y han pasado 3 h |
 
 El descuento siempre se calcula con el envío incluido. "Gratis" no cuenta si es "gratis con compra" ni
 "1 mes gratis". Los umbrales se podrán cambiar desde la web (fase 4).
@@ -83,7 +84,7 @@ de `crearDeal({...})`, y añade una entrada en `fuentes:` de `config.yml`.
 
 1. ✅ Base: estructura, config, modelo, puntuador y Chollometro en dry-run
 2. ✅ Avisos: Firestore, bot de Telegram, deduplicación, GitHub Actions y cron-job.org (en marcha desde el 7/11/2026)
-3. Más fuentes: canales de Telegram y GamerPower
+3. Más fuentes: canales de Telegram (GamerPower descartado: solo trae videojuegos)
 4. Web (PWA): login, feed, filtros, ajustes y estado
 5. Búsquedas web: Tavily con límites duros
 6. Pulido: limpieza diaria, alertas de fallo y guía completa

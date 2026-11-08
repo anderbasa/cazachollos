@@ -2,11 +2,21 @@
 // El esquema completo está documentado en DATA.md (fase 2).
 import { createHash } from 'node:crypto';
 
-export const CATEGORIAS = ['tecnologia', 'videojuegos', 'hogar', 'moda', 'otros'];
+export const CATEGORIAS = ['tecnologia', 'videojuegos', 'hogar', 'moda', 'belleza', 'otros'];
 
 /** id estable: hash de fuente + identificador en la fuente (20 caracteres hex). */
 export function idDeal(fuente, idFuente) {
   return createHash('sha1').update(`${fuente}:${idFuente}`).digest('hex').slice(0, 20);
+}
+
+/**
+ * ¿Ha bajado lo bastante desde el último aviso como para volver a avisar?
+ * Estricto (<) y nunca si ya se avisó a 0 €: lo gratis no puede "bajar más".
+ * (Con "<=", algo gratis contaba como rebajado en cada ejecución: así se repitieron 71 avisos.)
+ */
+export function esRebaja(precioNuevo, precioAvisado, pct) {
+  if (!(precioAvisado > 0) || precioNuevo == null) return false;
+  return precioNuevo < precioAvisado * (1 - pct / 100) - 0.005;
 }
 
 /** Descuento (%) sobre el precio efectivo (precio + envío). null si no se puede calcular. */

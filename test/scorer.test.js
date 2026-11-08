@@ -100,10 +100,42 @@ test('gratis verificado → siempre avisa; con compra o prueba, no', () => {
   assert.equal(p(deal({ ...gratis, etiquetas: ['GRATIS', 'PRUEBA'] })).esChollazo, false);
 });
 
-test('gratis de poco valor no avisa, salvo juego completo', () => {
+test('gratis de poco valor no avisa, salvo juego completo (si los videojuegos están activos)', () => {
+  const conJuegos = fusionar(U, { categorias_activas: [...U.categorias_activas, 'videojuegos'] });
   const juego = { categoria: 'videojuegos', precio: 0, precioAnterior: 7, temperatura: 0, etiquetas: ['GRATIS'] };
-  assert.equal(p(deal(juego)).esChollazo, false);
-  assert.equal(p(deal({ ...juego, etiquetas: ['GRATIS', 'JUEGO_COMPLETO'] })).esChollazo, true);
+  assert.equal(p(deal(juego), conJuegos).esChollazo, false);
+  assert.equal(p(deal({ ...juego, etiquetas: ['GRATIS', 'JUEGO_COMPLETO'] }), conJuegos).esChollazo, true);
+});
+
+test('categorías desactivadas: ni web ni bot (videojuegos y otros, por defecto)', () => {
+  for (const categoria of ['videojuegos', 'otros']) {
+    const r = p(deal({ categoria, precio: 10, temperatura: 900 }));
+    assert.equal(r.esChollo, false, categoria);
+    assert.equal(r.esChollazo, false, categoria);
+    assert.equal(r.filtrado, true);
+    assert.deepEqual(r.motivos, [], 'no sale como "casi chollazo"');
+  }
+  for (const categoria of ['moda', 'tecnologia', 'hogar', 'belleza']) assert.equal(p(deal({ categoria, temperatura: 400 })).esChollazo, true, categoria);
+});
+
+test('solo productos físicos y sin recopilaciones', () => {
+  const caliente = { precio: 10, temperatura: 900 };
+  for (const etiqueta of ['DIGITAL', 'NO_FISICO', 'CUPON', 'RECOPILACION']) {
+    const r = p(deal({ ...caliente, etiquetas: [etiqueta] }));
+    assert.equal(r.esChollo, false, etiqueta);
+    assert.equal(r.esChollazo, false, etiqueta);
+  }
+  const todo = fusionar(U, { solo_productos_fisicos: false, excluir_recopilaciones: false });
+  assert.equal(p(deal({ ...caliente, etiquetas: ['DIGITAL'] }), todo).esChollazo, true, 'se puede desactivar');
+});
+
+test('sin precio nunca avisa (salvo error de precio), aunque esté muy caliente', () => {
+  const sinPrecio = { precio: null, precioAnterior: null, temperatura: 1500, publicadoEn: hace(60) };
+  const r = p(deal(sinPrecio));
+  assert.equal(r.esChollazo, false);
+  assert.match(r.bloqueos.join(), /sin precio/);
+  assert.equal(r.esChollo, true, 'en la web sí, por temperatura');
+  assert.equal(p(deal({ ...sinPrecio, etiquetas: ['ERROR_DE_PRECIO'] })).esChollazo, true);
 });
 
 test('gratis sin precio conocido necesita votos', () => {

@@ -14,6 +14,15 @@ http:
   reintentos: 2 # con espera creciente; ante 429/403 se espera más
 
 umbrales:
+  # Qué te interesa. Lo de las demás categorías no entra ni en la web ni en el bot.
+  # (Decidido el 8/11/2026: fuera videojuegos y "otros".)
+  categorias_activas: [moda, tecnologia, hogar, belleza]
+  # Solo productos físicos: fuera plugins, apps, cursos, suscripciones, juegos digitales,
+  # viajes, tarifas, servicios y cupones genéricos de tienda.
+  solo_productos_fisicos: true
+  # Fuera las listas de varios productos ("Recopilación de… desde 7,99 €")
+  excluir_recopilaciones: true
+
   # Descuento mínimo (%) para entrar en la web, calculado con precio + envío.
   # Moda y otros estaban en 60 y 70 en el documento; se bajan a 50 para que nada
   # pueda avisar por Telegram sin aparecer en la web.
@@ -22,6 +31,7 @@ umbrales:
     videojuegos: 50
     hogar: 40
     moda: 50
+    belleza: 50
     otros: 50
   # Sin precio anterior, un chollo entra en la web si llega a esta temperatura.
   web_temperatura_minima: 300
@@ -32,6 +42,7 @@ umbrales:
     videojuegos: 50
     hogar: 50
     moda: 50
+    belleza: 50
     otros: 50
   # …y además la comunidad tiene que validarlo (basta con una de las dos):
   votos:
@@ -49,7 +60,7 @@ umbrales:
       - { grados: 1000, minutos: 120 }
       - { grados: 300, minutos: 30 }
 
-  # Nunca avisa:
+  # Nunca avisa (además: nunca de algo sin precio, salvo error de precio):
   nunca:
     precio_original_minimo: 15 # € (evita "-90 % en un cable de 2 €")
     locales: true # chollos solo en tiendas físicas o zonas concretas
@@ -58,7 +69,9 @@ umbrales:
   avisos:
     max_por_ejecucion: 10 # lo que sobre va en un único mensaje resumen
     max_por_dia: 40 # al llegar aquí, un aviso de "tope" y el resto solo a la web
-    rebaja_minima_pct: 5 # vuelve a avisar de un chollo ya avisado si baja al menos esto
+    rebaja_minima_pct: 5 # vuelve a avisar de un chollo ya avisado si baja al menos esto…
+    rebaja_espera_horas: 3 # …y han pasado al menos estas horas desde el último aviso…
+    max_por_chollo: 3 # …y como mucho estos mensajes en total del mismo chollo
 
   # Horas de silencio (Europe/Madrid). Los errores de precio y lo gratis se las saltan.
   silencio:
@@ -90,12 +103,17 @@ categorias:
   nombres:
     tecnologia: Tecnología e informática
     videojuegos: Videojuegos y juegos gratis
-    hogar: Hogar y electrodomésticos
+    hogar: Hogar, electrodomésticos y bricolaje
     moda: Moda y deporte
+    belleza: Salud y belleza
     otros: Otros
-  # Categoría de la fuente → una de las cinco. Lo que no esté aquí va a "otros".
+  # Categorías de Chollometro que no son productos físicos (con solo_productos_fisicos)
+  chollometro_no_fisicas: [servicios-varios, sector-servicios, finanzas-y-seguros, viajes-y-ocio, viajes, telecomunicaciones, tarifas-de-internet]
+  # Categoría de la fuente → una de las nuestras. Lo que no esté aquí va a "otros".
   # Las claves se comparan en minúsculas, sin tildes y con guiones.
   chollometro:
+    salud-y-cosmeticos: belleza
+    salud-y-belleza: belleza
     electronica: tecnologia
     telecomunicaciones: tecnologia
     tarifas-de-internet: tecnologia
@@ -152,11 +170,12 @@ fuentes:
       - { canal: chollometro, fiable: false } # red Chollometro
       - { canal: canaldechollos, fiable: false } # Michollo
       - { canal: gangagato, fiable: false } # bot de Amazon, mucho volumen
-      - { canal: chollosgamers, fiable: false } # gaming
+      # @chollosgamers quitado el 8/11/2026: los videojuegos no interesan
 
+  # Descartada el 8/11/2026: solo trae juegos gratis y los videojuegos no interesan.
   gamerpower:
     nombre: GamerPower
-    modulo: gamerpower # fase 3
+    modulo: gamerpower
     activa: false
     modos: [lento]
     url: https://www.gamerpower.com/api/giveaways

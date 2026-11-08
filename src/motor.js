@@ -8,6 +8,7 @@
 //   7. Guarda estado y un registro de la ejecución.
 import { fusionar } from './config.js';
 import { mensajeCola, mensajeFuenteDesactivada, mensajeFuenteFalla, mensajeFuenteRecuperada, mensajeResumen, mensajeTope } from './mensajes.js';
+import { esRebaja } from './deal.js';
 import { diaLocal, ejecutar, esUrgente, estaEnSilencio, ordenarAvisos } from './pipeline.js';
 import { modosDe } from './sources/index.js';
 
@@ -25,6 +26,8 @@ function entrada(d, previa, ahoraMin) {
     s: d.esChollazo ? 1 : 0,
     n: previa?.n ?? 0,
     pn: previa?.pn ?? null,
+    tn: previa?.tn ?? null,
+    na: previa?.na ?? 0,
     v: ahoraMin,
   };
 }
@@ -119,6 +122,8 @@ export async function ejecutarModo(opts) {
 
   // 4 · Comparar con el estado
   const ahoraMin = minutosEpoch(ahora);
+  const maxPorChollo = u.avisos.max_por_chollo ?? 3;
+  const esperaRebajaMin = (u.avisos.rebaja_espera_horas ?? 3) * 60;
   const porFuente = {};
   const pf = (id) => (porFuente[id] ??= { recientes: {}, borrar: [], campos: {} });
   const crear = [];
@@ -142,7 +147,13 @@ export async function ejecutarModo(opts) {
     const siembra = !opts.sinSiembra && !est?.sembrado;
     if (d.esChollazo && e?.n !== 1) {
       candidatos.push({ d, tipo: 'nuevo', siembra });
-    } else if (d.esChollazo && e?.n === 1 && e.pn != null && d.precioEfectivo != null && d.precioEfectivo <= e.pn * (1 - u.avisos.rebaja_minima_pct / 100)) {
+    } else if (
+      d.esChollazo &&
+      e?.n === 1 &&
+      esRebaja(d.precioEfectivo, e.pn, u.avisos.rebaja_minima_pct) &&
+      (e.na ?? 1) < maxPorChollo &&
+      ahoraMin - (e.tn ?? 0) >= esperaRebajaMin
+    ) {
       candidatos.push({ d, tipo: 'rebaja', antes: e.pn, siembra: false });
     }
   }
@@ -171,7 +182,12 @@ export async function ejecutarModo(opts) {
 
   // 5 · Avisos
   const dia = diaLocal(ahora, zona);
-  const marcarEntrada = (d) => Object.assign(pf(d.fuente).recientes[d.id], { n: 1, pn: d.precioEfectivo });
+  // n: avisado · pn: precio avisado · tn: minuto del último aviso · na: mensajes enviados de este chollo
+  const marcarEntrada = (d, { enviado = false } = {}) => {
+    const e = pf(d.fuente).recientes[d.id];
+    Object.assign(e, { n: 1, pn: d.precioEfectivo, tn: ahoraMin, na: (e.na ?? 0) + (enviado ? 1 : 0) });
+  };
+  const opcionesRebaja = { maxAvisos: maxPorChollo, esperaMs: esperaRebajaMin * 60_000 };
   const silencio = estaEnSilencio(u.silencio, ahora, zona);
   salida.silencio = silencio;
 
@@ -204,13 +220,13 @@ export async function ejecutarModo(opts) {
 
   let enviados = 0;
   for (const c of enviar) {
-    const rebajaPct = c.tipo === 'rebaja' ? u.avisos.rebaja_minima_pct : null;
-    const previo = await store.reclamarAviso(c.d.id, { ahora, precio: c.d.precioEfectivo, rebajaPct, via: 'telegram' });
-    if (!previo) continue; // otra ejecución ya lo avisó
+    const rebaja = c.tipo === 'rebaja' ? { rebajaPct: u.avisos.rebaja_minima_pct, ...opcionesRebaja } : {};
+    const previo = await store.reclamarAviso(c.d.id, { ahora, precio: c.d.precioEfectivo, via: 'telegram', ...rebaja });
+    if (!previo) continue; // otra ejecución ya lo avisó (o la rebaja no cumple las condiciones)
     try {
       await telegram.enviarChollo(c.d, { tipo: c.tipo, antes: c.antes, config });
       enviados++;
-      marcarEntrada(c.d);
+      marcarEntrada(c.d, { enviado: true });
       salida.enviados.push({ tipo: c.tipo, deal: c.d });
     } catch (e) {
       salida.errores.push(e.message);
@@ -247,7 +263,7 @@ export async function ejecutarModo(opts) {
       if (reclamados.length) {
         try {
           await telegram.enviarTexto(mensajeResumen(reclamados.map((x) => x.c.d), maxRonda));
-          for (const { c } of reclamados) marcarEntrada(c.d);
+          for (const { c } of reclamados) marcarEntrada(c.d, { enviado: true });
           salida.resumen = reclamados.map((x) => x.c.d);
           salida.enviados.push({ tipo: 'resumen', n: reclamados.length });
         } catch (e) {

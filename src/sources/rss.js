@@ -3,7 +3,7 @@
 // salvo que la entrada de config diga "verificado: true".
 import { XMLParser } from 'fast-xml-parser';
 import { crearDeal } from '../deal.js';
-import { detectarPalabras, extraerPrecios } from '../text.js';
+import { detectarPalabras, detectarTipo, extraerPrecios } from '../text.js';
 
 const xml = new XMLParser({
   ignoreAttributes: false,
@@ -33,6 +33,7 @@ export function parsearFeed(texto, { fuente, opciones = {} }) {
     const descripcion = limpiarHtml(texto_(it.description ?? it.summary ?? it['content:encoded']));
     const { precio, precioAnterior, porcentaje } = extraerPrecios(`${titulo} · ${descripcion}`);
     const etiquetas = detectarPalabras(titulo, descripcion.slice(0, 300));
+    for (const e of detectarTipo(titulo)) etiquetas.add(e);
     const fecha = it.pubDate ?? it.published ?? it.updated;
     out.push(
       crearDeal({

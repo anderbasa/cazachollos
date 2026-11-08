@@ -22,7 +22,7 @@ tiene el mismo id. Solo se guardan los chollos que entran en la web (`esChollo`)
 | `titulo` | string | |
 | `url` | string | Enlace a la ficha del chollo |
 | `tienda` | string \| null | |
-| `categoria` | string | `tecnologia` · `videojuegos` · `hogar` · `moda` · `otros` |
+| `categoria` | string | `tecnologia` · `videojuegos` · `hogar` · `moda` · `belleza` · `otros` (desde el 8/11/2026 solo se guardan las de `categorias_activas`: moda, tecnología, hogar y belleza) |
 | `categoriaFuente` | string \| null | Categoría original de la fuente |
 | `precio` | number \| null | Precio (0 = gratis; null = sin precio) |
 | `precioAnterior` | number \| null | Precio de referencia que da la fuente |
@@ -41,7 +41,7 @@ tiene el mismo id. Solo se guardan los chollos que entran en la web (`esChollo`)
 | `local` | boolean | Solo en tiendas físicas o zonas concretas |
 | `verificado` | boolean | Datos de una fuente fiable (Chollometro, GamerPower) |
 | `gratis` | boolean | Precio 0 verificado (no cuenta "gratis con compra" ni pruebas) |
-| `etiquetas` | string[] | `ERROR_DE_PRECIO`, `GRATIS` (palabra clave), `SIN_VERIFICAR`, `CADUCADO`, `LOCAL`, `CON_COMPRA`, `PRUEBA`, `REGALO`, `CIEN_POR_CIEN`, `JUEGO_COMPLETO` |
+| `etiquetas` | string[] | `ERROR_DE_PRECIO`, `GRATIS` (palabra clave), `SIN_VERIFICAR`, `CADUCADO`, `LOCAL`, `CON_COMPRA`, `PRUEBA`, `REGALO`, `CIEN_POR_CIEN`, `JUEGO_COMPLETO`, y de tipo: `DIGITAL` (plugins, apps, cursos, suscripciones…), `NO_FISICO` (servicios, viajes, tarifas), `CUPON` (cupón genérico de tienda), `RECOPILACION` (lista de varios productos) |
 | `puntuacion` | number | 0–100, para ordenar "Mejores" |
 | `esChollo` | boolean | Cumple las reglas de la web |
 | `esChollazo` | boolean | Cumple las reglas de aviso |
@@ -69,7 +69,7 @@ Una sola escritura por ejecución y fuente.
 | `ultimoError` | Texto corto (sin datos personales) |
 | `alertaEnviada` | Ya se avisó por Telegram de que falla |
 | `desactivada` | `true` si nos bloqueó varias veces; no se vuelve a pedir hasta reactivarla |
-| `recientes` | Mapa compacto `{ [dealId]: { t, p, c, b, s, n, pn, v } }` de los chollos guardados vistos en las últimas 72 h: temperatura, precio efectivo, caducado (0/1), banda de temperatura, chollazo (0/1), avisado (0/1), precio avisado y último minuto visto (minutos desde 1970). Sirve para escribir un chollo solo cuando cambia algo relevante. |
+| `recientes` | Mapa compacto `{ [dealId]: { t, p, c, b, s, n, pn, tn, na, v } }` de los chollos guardados vistos en las últimas 72 h: temperatura, precio efectivo, caducado (0/1), banda de temperatura, chollazo (0/1), avisado (0/1), precio avisado, minuto del último aviso, mensajes enviados y último minuto visto (minutos desde 1970). Sirve para escribir un chollo solo cuando cambia algo relevante. |
 
 ## `estado/_global`
 

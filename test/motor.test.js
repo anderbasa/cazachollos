@@ -84,17 +84,43 @@ test('avisa una vez y nunca dos', async () => {
   assert.equal(store.db.estado.get('_global').avisosHoy, 1);
 });
 
-test('vuelve a avisar si baja al menos un 5 % más', async () => {
+test('vuelve a avisar si baja al menos un 5 % más (y han pasado 3 h)', async () => {
   const store = sembrado();
   await correr({ store, deals: [chollo(1, { precio: 40 })] });
-  const b = await correr({ store, deals: [chollo(1, { precio: 39 })], ahora: T0 + 10 * MIN });
+  const b = await correr({ store, deals: [chollo(1, { precio: 39 })], ahora: T0 + 4 * 60 * MIN });
   assert.equal(b.telegram.enviados.length, 0, '-2,5 % no basta');
-  const c = await correr({ store, deals: [chollo(1, { precio: 37 })], ahora: T0 + 20 * MIN });
+  const pronto = await correr({ store, deals: [chollo(1, { precio: 37 })], ahora: T0 + 60 * MIN });
+  assert.equal(pronto.telegram.enviados.length, 0, 'a la hora del primer aviso, todavía no');
+  const c = await correr({ store, deals: [chollo(1, { precio: 37 })], ahora: T0 + 4 * 60 * MIN });
   const [m] = chollosEnviados(c.telegram);
   assert.ok(m, 'avisa de la rebaja');
   assert.match(m.texto, /HA BAJADO AÚN MÁS/);
   assert.match(m.texto, /Te avisé a 40 €/);
   assert.equal(store.db.deals.get(chollo(1).id).precioNotificado, 37);
+});
+
+test('como mucho 3 mensajes del mismo chollo, aunque siga bajando', async () => {
+  const store = sembrado();
+  let enviados = 0;
+  for (const [i, precio] of [40, 36, 32, 28, 24].entries()) {
+    const { telegram } = await correr({ store, deals: [chollo(1, { precio })], ahora: T0 + i * 4 * 60 * MIN });
+    enviados += chollosEnviados(telegram).length;
+  }
+  assert.equal(enviados, 3);
+});
+
+// El fallo del 7/11/2026: algo gratis (0 €) "bajaba" a 0 € en cada ejecución → 71 avisos repetidos
+test('lo gratis nunca se repite como "ha bajado aún más"', async () => {
+  const gratis = (id) => chollo(id, { precio: 0, precioAnterior: 30, etiquetas: ['GRATIS'] });
+  for (const inicio of ['siembra', 'aviso']) {
+    const store = inicio === 'siembra' ? crearStoreMemoria() : sembrado();
+    let mensajes = 0;
+    for (let h = 0; h < 30; h++) {
+      const { telegram } = await correr({ store, deals: [gratis(1)], ahora: T0 + h * 60 * MIN });
+      mensajes += telegram.enviados.length;
+    }
+    assert.equal(mensajes, inicio === 'siembra' ? 0 : 1, `empezando por ${inicio}`);
+  }
 });
 
 test('solo reescribe un chollo cuando cambia algo relevante', async () => {

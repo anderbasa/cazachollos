@@ -47,6 +47,46 @@ const RE_PRUEBA = /\b(prueba gratis|gratis (durante|por) \d+|\d+ (d[ií]as?|sema
 const RE_CIEN = /(-\s?100\s?%|\b100\s?%\s?(de\s)?(descuento|dto\.?|gratis|off|reembolso))/i;
 const RE_REGALO = /\b(de regalo|regalo|regala)\b/i;
 
+// Lo que no es un producto físico. Cuidado con los falsos positivos: "reloj digital", "Kindle",
+// "Steam Deck", "plancha Steam Force", "licencia oficial" (merchandising) sí son físicos.
+const RE_DIGITAL = new RegExp(
+  [
+    String.raw`\bplugins?\b`,
+    String.raw`\bvst\b`,
+    String.raw`\bsoftware\b`,
+    String.raw`\blicencias?\s+(de\s+(uso|por vida|\d+)|completa|anual|vitalicia|perpetua|windows|office)`,
+    String.raw`\b(windows|office)\s+\d*\s*(pro|home|hogar)?\s*(key|clave|licencia)`,
+    // "1 año de suscripción", "suscripción anual"… pero no "cámara con suscripción incluida"
+    String.raw`\b\d+\s*(mes|meses|año|años)\s+de\s+suscripci[oó]n`,
+    String.raw`\bsuscripci[oó]n\s+(anual|mensual|trimestral|de\s+\d+|gratis|premium)`,
+    String.raw`^\s*suscripci[oó]n\b`,
+    String.raw`\be-?books?\b`,
+    String.raw`\bkindle unlimited\b`,
+    String.raw`\baudible\b`,
+    String.raw`\bcursos?\b`,
+    String.raw`\budemy\b`,
+    String.raw`\bwebinars?\b`,
+    String.raw`\bepic games\b`,
+    String.raw`\bgog(\.com)?\b`,
+    String.raw`\bprime gaming\b`,
+    String.raw`\bgame ?pass\b`,
+    String.raw`\b(ps|playstation) plus\b`,
+    String.raw`\bdlc\b`,
+    String.raw`\bvpn\b`,
+    String.raw`\bantivirus\b`,
+    String.raw`\b(netflix|spotify|dazn|youtube premium|crunchyroll|filmin|hbo max)\b`,
+    String.raw`\b(disney|apple tv|movistar|paramount)\s?\+`,
+    String.raw`\b(c[oó]digo|versi[oó]n|edici[oó]n|formato)\s+digital\b`,
+    String.raw`\|\s*digital\b`,
+    String.raw`\b(apps?|aplicaci[oó]n(es)?)\b`,
+    String.raw`\((android|ios)(\s*[/,y]\s*(android|ios))?\)`,
+    String.raw`\b(recursos|assets)\s+gratis`,
+  ].join('|'),
+  'i',
+);
+// Listas de varios productos ("Recopilación de… desde 7,99 €") en vez de un chollo concreto
+const RE_RECOPILACION = /\b(recopilaci[oó]n|recopilatorio|mega ?recopilaci[oó]n|selecci[oó]n de|top \d+ (de )?(chollos|ofertas)|resumen (semanal|diario|de la semana)|ofertas en)\b/i;
+
 /** Detecta etiquetas a partir de título (y opcionalmente descripción/categoría). */
 export function detectarPalabras(...textos) {
   const t = textos.filter(Boolean).join(' · ');
@@ -60,6 +100,14 @@ export function detectarPalabras(...textos) {
     if (RE_CON_COMPRA.test(t)) etiquetas.add('CON_COMPRA');
     if (RE_PRUEBA.test(t)) etiquetas.add('PRUEBA');
   }
+  return etiquetas;
+}
+
+/** Etiquetas de "qué es": DIGITAL (no físico) y RECOPILACION. Solo mira el título. */
+export function detectarTipo(titulo) {
+  const etiquetas = new Set();
+  if (RE_DIGITAL.test(titulo)) etiquetas.add('DIGITAL');
+  if (RE_RECOPILACION.test(titulo)) etiquetas.add('RECOPILACION');
   return etiquetas;
 }
 

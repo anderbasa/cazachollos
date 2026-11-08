@@ -4,6 +4,7 @@
 // Las credenciales se leen y comprueban en src/entorno.js (sin revelarlas nunca en los logs).
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { FieldValue, getFirestore, Timestamp } from 'firebase-admin/firestore';
+import { rebajaPermitida } from './memoria.js';
 
 const CAMPOS_FECHA = new Set(['publicadoEn', 'vistoEn', 'actualizadoEn', 'notificadoEn', 'inicio', 'fin', 'ultimaEjecucion', 'ultimaOk', 'ultimoFallo', 'fallandoDesde']);
 const NOMBRE_APP = 'cazachollos';
@@ -78,13 +79,13 @@ export function crearStoreFirestore(credenciales) {
       await deal(id).set(datos, { merge: true });
     },
 
-    async reclamarAviso(id, { ahora, precio, rebajaPct = null, via = 'telegram' }) {
+    async reclamarAviso(id, { ahora, precio, rebajaPct = null, maxAvisos = 3, esperaMs = 0, via = 'telegram' }) {
       return db.runTransaction(async (tx) => {
         const s = await tx.get(deal(id));
         if (!s.exists) return null;
         const d = s.data();
         if (d.notificado && rebajaPct == null) return null;
-        if (rebajaPct != null && d.precioNotificado != null && !(precio <= d.precioNotificado * (1 - rebajaPct / 100))) return null;
+        if (rebajaPct != null && !rebajaPermitida(d, { ahora, precio, rebajaPct, maxAvisos, esperaMs })) return null;
         const previo = { notificado: d.notificado ?? false, precioNotificado: d.precioNotificado ?? null, notificadoEn: d.notificadoEn ?? null, via: d.via ?? null };
         tx.update(deal(id), { notificado: true, notificadoEn: aTs(ahora), precioNotificado: precio, via, avisos: FieldValue.increment(1) });
         return previo;

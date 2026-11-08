@@ -1,7 +1,18 @@
 // Almacén en memoria con la misma interfaz que el de Firestore. Para tests y para el
 // dry-run sin credenciales. Las fechas se guardan como milisegundos.
 
+import { esRebaja } from '../deal.js';
+
 const clonar = (x) => (x == null ? x : structuredClone(x));
+
+/** Nueva rebaja de un chollo ya avisado: baja de verdad, no supera el máximo y ha pasado la espera. */
+export function rebajaPermitida(d, { ahora, precio, rebajaPct, maxAvisos, esperaMs }) {
+  if (!esRebaja(precio, d.precioNotificado, rebajaPct)) return false;
+  if ((d.avisos ?? 0) >= maxAvisos) return false;
+  const ultimo = typeof d.notificadoEn?.toMillis === 'function' ? d.notificadoEn.toMillis() : d.notificadoEn;
+  if (esperaMs > 0 && ultimo != null && ahora - ultimo < esperaMs) return false;
+  return true;
+}
 
 export function crearStoreMemoria(inicial = {}) {
   const db = {
@@ -45,11 +56,11 @@ export function crearStoreMemoria(inicial = {}) {
     },
 
     /** Marca como avisado de forma atómica. Devuelve lo que había (para deshacer) o null si ya estaba. */
-    async reclamarAviso(id, { ahora, precio, rebajaPct = null, via = 'telegram' }) {
+    async reclamarAviso(id, { ahora, precio, rebajaPct = null, maxAvisos = 3, esperaMs = 0, via = 'telegram' }) {
       const d = db.deals.get(id);
       if (!d) return null;
       if (d.notificado && rebajaPct == null) return null;
-      if (rebajaPct != null && d.precioNotificado != null && !(precio <= d.precioNotificado * (1 - rebajaPct / 100))) return null;
+      if (rebajaPct != null && !rebajaPermitida(d, { ahora, precio, rebajaPct, maxAvisos, esperaMs })) return null;
       const previo = { notificado: d.notificado ?? false, precioNotificado: d.precioNotificado ?? null, notificadoEn: d.notificadoEn ?? null, via: d.via ?? null };
       Object.assign(d, { notificado: true, notificadoEn: ahora, precioNotificado: precio, via, avisos: (d.avisos ?? 0) + 1 });
       return previo;

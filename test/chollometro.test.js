@@ -62,6 +62,20 @@ test('un juego gratis de Epic', () => {
   assert.ok(d.etiquetas.includes('GRATIS'));
 });
 
+test('marca lo que no es producto físico y las recopilaciones', () => {
+  const todos = ['nuevos', 'subiendo', 'gratis', 'destacados'].flatMap(listado);
+  const con = (t) => porTitulo(todos, t).etiquetas;
+  assert.ok(con('Epic Games regala Flotsam').includes('DIGITAL'));
+  assert.ok(con('Plugin Vst BRIGADE GRATIS').includes('DIGITAL'));
+  assert.ok(con('1 mes GRATIS de Duolingo').includes('NO_FISICO'), 'categoría Viajes');
+  assert.ok(con('Peluches Disney Store').includes('CUPON'));
+  assert.ok(con('Recopilatorio de decoración y luces de Navidad en Aldi').includes('RECOPILACION'));
+  assert.ok(con('Synonyms, MSafe - Pro, Evertale').includes('RECOPILACION'), 'lista de apps gratis');
+  assert.equal(porTitulo(todos, 'Hugo Boss - Hugo Man Eau de Toilette').categoria, 'belleza');
+  const nike = con('NIKE AIR FORCE 1 - Zapatillas piel');
+  for (const e of ['DIGITAL', 'NO_FISICO', 'CUPON', 'RECOPILACION']) assert.ok(!nike.includes(e));
+});
+
 test('un cupón va a /cupones/ y trae su código', () => {
   const d = porTitulo(listado('gratis'), 'Peluches Disney Store');
   assert.match(d.url, /^https:\/\/www\.chollometro\.com\/cupones\//);
