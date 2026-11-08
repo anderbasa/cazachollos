@@ -73,7 +73,9 @@ src/deal.js             modelo Deal normalizado
 src/http.js             peticiones educadas (User-Agent fijo, pausas, reintentos, backoff)
 src/sources/            una fuente por módulo, todas con fetch() → [Deal]
   chollometro.js        listado con JSON embebido; si falla, su RSS
+  telegram.js           canales públicos (t.me/s/<canal>); cruza con Chollometro si lo enlazan
   rss.js                plantilla para el RSS de otra web de chollos
+src/categorizar.js      categoría por palabras del título (para lo que llega de los canales)
 test/                   tests; test/fixtures guarda páginas reales de Chollometro
 ```
 
@@ -84,7 +86,7 @@ de `crearDeal({...})`, y añade una entrada en `fuentes:` de `config.yml`.
 
 1. ✅ Base: estructura, config, modelo, puntuador y Chollometro en dry-run
 2. ✅ Avisos: Firestore, bot de Telegram, deduplicación, GitHub Actions y cron-job.org (en marcha desde el 7/11/2026)
-3. Más fuentes: canales de Telegram (GamerPower descartado: solo trae videojuegos)
+3. ✅ Más fuentes: 5 canales de Telegram (@chollos, @descuentos, @chollometro, @canaldechollos, @gangagato). GamerPower descartado: solo trae videojuegos
 4. Web (PWA): login, feed, filtros, ajustes y estado
 5. Búsquedas web: Tavily con límites duros
 6. Pulido: limpieza diaria, alertas de fallo y guía completa

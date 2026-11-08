@@ -45,8 +45,9 @@ export function crearDeal(c) {
   if (c.local) etiquetas.add('LOCAL');
   return {
     id: idDeal(c.fuente, c.idFuente),
-    fuente: c.fuente, // id de la fuente en config.yml (chollometro, telegram, gamerpower…)
+    fuente: c.fuente, // id de la fuente en config.yml (chollometro, telegram…): decide el id y el estado
     origen: c.origen ?? c.fuente, // detalle: listado, canal…
+    fuentes: [...new Set(c.fuentes ?? [c.fuente])], // todas las que lo han visto (se unen al fusionar)
     idFuente: String(c.idFuente),
     titulo: String(c.titulo).trim(),
     url: c.url,

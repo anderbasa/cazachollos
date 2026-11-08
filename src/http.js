@@ -29,7 +29,7 @@ export function crearHttp(cfg = {}) {
     return base * 3 ** intento;
   }
 
-  async function pedir(url, { accept = '*/*', json = false, headers = {} } = {}) {
+  async function pedir(url, { accept = '*/*', json = false, headers = {}, soloRedireccion = false } = {}) {
     const host = new URL(url).host;
     for (let intento = 0; ; intento++) {
       const falta = (ultimaPorHost.get(host) ?? 0) + pausaMs - Date.now();
@@ -41,14 +41,15 @@ export function crearHttp(cfg = {}) {
         res = await fetch(url, {
           headers: { 'User-Agent': userAgent, Accept: accept, 'Accept-Language': 'es-ES,es;q=0.9', ...headers },
           signal: AbortSignal.timeout(timeoutMs),
-          redirect: 'follow',
+          redirect: soloRedireccion ? 'manual' : 'follow',
         });
       } catch (e) {
         if (intento >= reintentos) throw new HttpError(`sin respuesta (${e.name})`, 0, url);
         await sleep(espera(intento, 0));
         continue;
       }
-      if (res.ok) return json ? res.json() : res.text();
+      if (soloRedireccion && res.status >= 300 && res.status < 400) return res.headers.get('location');
+      if (res.ok) return soloRedireccion ? null : json ? res.json() : res.text();
       const reintentable = [403, 429, 500, 502, 503, 504].includes(res.status);
       if (!reintentable || intento >= reintentos) throw new HttpError(`HTTP ${res.status}`, res.status, url);
       const retryAfter = Number(res.headers.get('retry-after'));
@@ -59,6 +60,8 @@ export function crearHttp(cfg = {}) {
   return {
     texto: (url, opts) => pedir(url, opts),
     json: (url, opts) => pedir(url, { accept: 'application/json', ...opts, json: true }),
+    /** A dónde redirige un enlace corto, sin seguirlo (null si no redirige). */
+    redireccion: (url, opts) => pedir(url, { ...opts, soloRedireccion: true }),
     get peticiones() {
       return peticiones;
     },

@@ -100,6 +100,8 @@ export function puntuar(deal, u, ahora = Date.now()) {
   if (errorPrecio) p = Math.max(p, 85);
   if (esChollazo) p = Math.max(p, 70);
   if (!deal.verificado) p *= 0.85;
+  // Lo han elegido los editores de @chollos / @descuentos: suma puntos (no cuenta como votos)
+  if (tags.has('EDITORES')) p += u.bonus_editores ?? 10;
   if (deal.caducado) p *= 0.5;
 
   return {

@@ -22,6 +22,8 @@ umbrales:
   solo_productos_fisicos: true
   # Fuera las listas de varios productos ("Recopilación de… desde 7,99 €")
   excluir_recopilaciones: true
+  # Puntos extra (de 100) si lo publican los editores de @chollos o @descuentos
+  bonus_editores: 10
 
   # Descuento mínimo (%) para entrar en la web, calculado con precio + envío.
   # Moda y otros estaban en 60 y 70 en el documento; se bajan a 50 para que nada
@@ -159,15 +161,17 @@ fuentes:
 
   telegram:
     nombre: Telegram
-    modulo: telegram # fase 3
-    activa: false
+    modulo: telegram
+    activa: true
     modos: [rapido]
-    # Vista web pública https://t.me/s/<canal>. "fiable: true" permite avisar
-    # de lo que no se pueda verificar en Chollometro.
+    paginas_extra: 2 # si hay más mensajes nuevos que los de una página, pide hasta 2 más
+    max_enlaces_cortos: 15 # enlaces chollo.to que se resuelven por ejecución (@chollometro)
+    # Vista web pública https://t.me/s/<canal>. "fiable: true" permite avisar de lo que no se
+    # pueda verificar en Chollometro. "editores: true" = canal de selección: suma puntos.
     canales:
-      - { canal: chollos, fiable: false } # red Chollometro
-      - { canal: descuentos, fiable: false } # red Chollometro
-      - { canal: chollometro, fiable: false } # red Chollometro
+      - { canal: chollos, fiable: false, editores: true } # red Chollometro, selección
+      - { canal: descuentos, fiable: false, editores: true } # red Chollometro, selección
+      - { canal: chollometro, fiable: false } # red Chollometro, todo
       - { canal: canaldechollos, fiable: false } # Michollo
       - { canal: gangagato, fiable: false } # bot de Amazon, mucho volumen
       # @chollosgamers quitado el 8/11/2026: los videojuegos no interesan

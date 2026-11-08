@@ -18,7 +18,7 @@ tiene el mismo id. Solo se guardan los chollos que entran en la web (`esChollo`)
 | `fuente` | string | Id de la fuente en `config.yml` (`chollometro`, `telegram`, `gamerpower`, `busqueda`…) |
 | `origen` | string | Detalle: listado (`nuevos`, `subiendo`, `gratis`, `nuevos-rss`…) o canal |
 | `fuentes` | string[] | Todas las fuentes que lo han visto (se fusionan en un solo registro) |
-| `idFuente` | string | Identificador en la fuente (en Chollometro, el número del hilo) |
+| `idFuente` | string | Identificador en la fuente. Chollometro: el número del hilo (también cuando llega por un canal que lo enlaza: así se fusiona). Telegram: `amazon:<ASIN>` si enlaza a Amazon, o `titulo:<huella>` del título |
 | `titulo` | string | |
 | `url` | string | Enlace a la ficha del chollo |
 | `tienda` | string \| null | |
@@ -41,7 +41,7 @@ tiene el mismo id. Solo se guardan los chollos que entran en la web (`esChollo`)
 | `local` | boolean | Solo en tiendas físicas o zonas concretas |
 | `verificado` | boolean | Datos de una fuente fiable (Chollometro, GamerPower) |
 | `gratis` | boolean | Precio 0 verificado (no cuenta "gratis con compra" ni pruebas) |
-| `etiquetas` | string[] | `ERROR_DE_PRECIO`, `GRATIS` (palabra clave), `SIN_VERIFICAR`, `CADUCADO`, `LOCAL`, `CON_COMPRA`, `PRUEBA`, `REGALO`, `CIEN_POR_CIEN`, `JUEGO_COMPLETO`, y de tipo: `DIGITAL` (plugins, apps, cursos, suscripciones…), `NO_FISICO` (servicios, viajes, tarifas), `CUPON` (cupón genérico de tienda), `RECOPILACION` (lista de varios productos) |
+| `etiquetas` | string[] | `ERROR_DE_PRECIO`, `GRATIS` (palabra clave), `SIN_VERIFICAR`, `CADUCADO`, `LOCAL`, `CON_COMPRA`, `PRUEBA`, `REGALO`, `CIEN_POR_CIEN`, `JUEGO_COMPLETO`, y de tipo: `DIGITAL` (plugins, apps, cursos, suscripciones…), `NO_FISICO` (servicios, viajes, tarifas), `CUPON` (cupón genérico de tienda), `RECOPILACION` (lista de varios productos); y de canales: `EN_TELEGRAM` (salió en un canal), `EDITORES` (lo eligieron @chollos o @descuentos: +10 puntos) |
 | `puntuacion` | number | 0–100, para ordenar "Mejores" |
 | `esChollo` | boolean | Cumple las reglas de la web |
 | `esChollazo` | boolean | Cumple las reglas de aviso |
@@ -52,7 +52,7 @@ tiene el mismo id. Solo se guardan los chollos que entran en la web (`esChollo`)
 | `precioNotificado` | number \| null | Precio efectivo en el último aviso (para avisar de nuevas rebajas) |
 | `avisos` | number | Cuántos mensajes se han enviado de este chollo |
 | `via` | string \| null | Cómo se marcó: `telegram`, `resumen`, `siembra` (primera ejecución, sin aviso), `silencio` (fue al resumen de la mañana), `tope` (se superó el máximo diario) |
-| `extra` | map | Datos propios de la fuente (no estables) |
+| `extra` | map | Datos propios de la fuente (no estables). Telegram: `canal`, `canales`, `post` (enlace al mensaje), `mensaje`, `parcial` (solo datos del mensaje, sin cruzar con el listado) |
 | `favorito` | boolean | **Lo escribe la web**, nunca el script |
 | `oculto` | boolean | **Lo escribe la web**, nunca el script |
 
@@ -70,6 +70,9 @@ Una sola escritura por ejecución y fuente.
 | `alertaEnviada` | Ya se avisó por Telegram de que falla |
 | `desactivada` | `true` si nos bloqueó varias veces; no se vuelve a pedir hasta reactivarla |
 | `recientes` | Mapa compacto `{ [dealId]: { t, p, c, b, s, n, pn, tn, na, v } }` de los chollos guardados vistos en las últimas 72 h: temperatura, precio efectivo, caducado (0/1), banda de temperatura, chollazo (0/1), avisado (0/1), precio avisado, minuto del último aviso, mensajes enviados y último minuto visto (minutos desde 1970). Sirve para escribir un chollo solo cuando cambia algo relevante. |
+
+`estado/telegram` además guarda `ultimos` (`{ [canal]: id del último mensaje leído }`) y `canales`
+(`{ [canal]: { fallos, ultimoError } }`).
 
 ## `estado/_global`
 

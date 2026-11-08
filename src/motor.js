@@ -47,7 +47,7 @@ export function docDeDeal(d, ahora, zona, nuevo) {
     id: d.id,
     fuente: d.fuente,
     origen: d.origen,
-    fuentes: [d.fuente],
+    fuentes: d.fuentes ?? [d.fuente],
     idFuente: d.idFuente,
     titulo: d.titulo,
     url: d.url,
@@ -117,7 +117,7 @@ export async function ejecutarModo(opts) {
   const solo = ids.filter((id) => !salida.desactivadas.includes(id));
 
   // 3 · Recoger y puntuar
-  const r = await ejecutar({ modo, config, http, log, ahora, solo, fuentes: fuentesInyectadas });
+  const r = await ejecutar({ modo, config, http, log, ahora, solo, fuentes: fuentesInyectadas, estados });
   Object.assign(salida, { resultados: r.resultados, todos: r.todos, chollos: r.chollos, chollazos: r.chollazos, casi: r.casi, peticiones: r.peticiones });
 
   // 4 · Comparar con el estado
@@ -134,6 +134,9 @@ export async function ejecutarModo(opts) {
   for (const d of r.todos) {
     const est = estados[d.fuente];
     const e = est?.recientes?.[d.id];
+    // Un canal que enlaza a un chollo de Chollometro ya guardado no aporta nada: nunca se pisan
+    // los datos completos del listado (temperatura, envío…) con los parciales del mensaje.
+    if (e && d.extra?.parcial) continue;
     if (!e) {
       if (!d.esChollo || d.caducado) continue; // solo se guarda lo que entra en la web
       crear.push(d);
@@ -290,6 +293,7 @@ export async function ejecutarModo(opts) {
   for (const res of r.resultados) {
     const est = estados[res.fuente] ?? {};
     const campos = pf(res.fuente).campos;
+    Object.assign(campos, res.cambiosEstado ?? {}); // lo que la fuente quiere recordar (último mensaje leído…)
     campos.ultimaEjecucion = ahora;
     if (res.ok) {
       Object.assign(campos, { sembrado: true, ultimaOk: ahora, fallosSeguidos: 0, bloqueosSeguidos: 0, ultimoError: null, fallandoDesde: null });
