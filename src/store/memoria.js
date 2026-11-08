@@ -102,6 +102,10 @@ export function crearStoreMemoria(inicial = {}) {
       db.estado.set(fuente, { ...e, ...clonar(campos), recientes: rec });
     },
 
+    async listarDeals() {
+      return [...db.deals.values()].map(clonar);
+    },
+
     async registrarEjecucion(id, datos) {
       db.ejecuciones.set(id, clonar(datos));
     },

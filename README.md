@@ -36,6 +36,10 @@ npm run dry          # modo rápido: Chollometro "nuevos" + "subiendo"
 npm run dry:lento    # modo lento: Chollometro "gratis"
 npm run prueba       # comprueba que Firestore y el token de Telegram funcionan (sin enviar nada)
 npm test             # tests con páginas reales guardadas
+npm run web          # la web en http://localhost:5180 (con ?demo, datos de salida/demo.json sin login)
+npm run web -- --exportar   # copia de solo lectura de Firestore para la demo
+npm run reglas       # publica firestore.rules con tu UID
+npm run recalcular   # vuelve a aplicar los ajustes a los chollos ya guardados
 ```
 
 `node src/main.js --modo rapido --dry-run --todos` enseña todos los chollos que entrarían en la web.
@@ -67,6 +71,8 @@ src/motor.js            una ejecución: estado → recoger → escribir solo cam
 src/pipeline.js         fuentes aisladas → puntuar → deduplicar
 src/store/              Firestore (real), memoria (tests) y modo solo lectura (dry-run)
 src/telegram.js         bot (solo envía); src/mensajes.js: textos de los avisos
+docs/                   la web (GitHub Pages): index.html, js/, css/, sw.js, manifest, iconos
+firestore.rules         solo tu cuenta lee; desde la web solo se escribe favorito/oculto y ajustes
 .github/workflows/      ejecutar (cron-job.org), respaldo (schedule), motor (común), tests
 src/scorer.js           puntuación 0–100 y reglas chollo/chollazo
 src/deal.js             modelo Deal normalizado
@@ -87,6 +93,6 @@ de `crearDeal({...})`, y añade una entrada en `fuentes:` de `config.yml`.
 1. ✅ Base: estructura, config, modelo, puntuador y Chollometro en dry-run
 2. ✅ Avisos: Firestore, bot de Telegram, deduplicación, GitHub Actions y cron-job.org (en marcha desde el 7/11/2026)
 3. ✅ Más fuentes: 5 canales de Telegram (@chollos, @descuentos, @chollometro, @canaldechollos, @gangagato). GamerPower descartado: solo trae videojuegos
-4. Web (PWA): login, feed, filtros, ajustes y estado
+4. ✅ Web (PWA): login con Google, Mejores/Últimos/Favoritos, filtros, ajustes y estado → https://anderbasa.github.io/cazachollos/
 5. Búsquedas web: Tavily con límites duros
 6. Pulido: limpieza diaria, alertas de fallo y guía completa

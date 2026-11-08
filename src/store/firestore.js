@@ -6,7 +6,7 @@ import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { FieldValue, getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { rebajaPermitida } from './memoria.js';
 
-const CAMPOS_FECHA = new Set(['publicadoEn', 'vistoEn', 'actualizadoEn', 'notificadoEn', 'inicio', 'fin', 'ultimaEjecucion', 'ultimaOk', 'ultimoFallo', 'fallandoDesde']);
+const CAMPOS_FECHA = new Set(['publicadoEn', 'vistoEn', 'actualizadoEn', 'notificadoEn', 'inicio', 'fin', 'ultimaEjecucion', 'ultimaOk', 'ultimoFallo', 'fallandoDesde', 'desactivadaEn']);
 const NOMBRE_APP = 'cazachollos';
 
 const aTs = (v) => (v == null ? null : v instanceof Timestamp ? v : Timestamp.fromMillis(typeof v === 'number' ? v : Date.parse(v)));
@@ -125,6 +125,10 @@ export function crearStoreFirestore(credenciales) {
       for (const id of borrar) rec[id] = FieldValue.delete();
       if (Object.keys(rec).length) datos.recientes = rec;
       await db.doc(`estado/${fuente}`).set(datos, { merge: true });
+    },
+
+    async listarDeals() {
+      return (await db.collection('deals').get()).docs.map((d) => sinTimestamps(d.data()));
     },
 
     async registrarEjecucion(id, datos) {

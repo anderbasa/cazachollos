@@ -7,9 +7,8 @@ import { normalizarClave } from './text.js';
 
 const RUTA = fileURLToPath(new URL('../config.yml', import.meta.url));
 
-export function cargarConfig(ruta = RUTA, umbralesRemotos = null) {
+export function cargarConfig(ruta = RUTA) {
   const config = parse(readFileSync(ruta, 'utf8'));
-  if (umbralesRemotos) config.umbrales = fusionar(config.umbrales, umbralesRemotos);
   validar(config);
   return config;
 }
@@ -23,13 +22,41 @@ export function fusionar(base, encima) {
   return out;
 }
 
+/**
+ * Umbrales efectivos = config.yml + lo editado en la web (config/umbrales). Si lo de la web no es
+ * válido (un número que no es número, una categoría desconocida…), se ignora entero y se avisa:
+ * el bot sigue funcionando con config.yml en vez de romperse.
+ */
+export function umbralesEfectivos(config, remotos, log) {
+  if (!remotos) return config.umbrales;
+  const u = fusionar(config.umbrales, remotos);
+  try {
+    validarUmbrales(u);
+    return u;
+  } catch (e) {
+    log?.aviso(`Ajustes de la web no válidos (${e.message}); uso los de config.yml`);
+    return config.umbrales;
+  }
+}
+
+export function validarUmbrales(u) {
+  const num = (v, donde, min = 0, max = 100000) => {
+    if (typeof v !== 'number' || !Number.isFinite(v) || v < min || v > max) throw new Error(`${donde} no es un número válido`);
+  };
+  for (const grupo of ['web', 'aviso']) for (const cat of CATEGORIAS) num(u?.[grupo]?.[cat], `umbrales.${grupo}.${cat}`, 0, 100);
+  if (u.categorias_activas != null) {
+    if (!Array.isArray(u.categorias_activas) || u.categorias_activas.some((c) => !CATEGORIAS.includes(c))) throw new Error('categorias_activas no es válido');
+  }
+  num(u.votos?.temperatura, 'votos.temperatura');
+  num(u.nunca?.precio_original_minimo, 'nunca.precio_original_minimo');
+  num(u.avisos?.max_por_dia, 'avisos.max_por_dia', 0, 500);
+  num(u.avisos?.max_por_ejecucion, 'avisos.max_por_ejecucion', 0, 100);
+  if (u.silencio?.activo && !(/^\d\d:\d\d$/.test(u.silencio.desde) && /^\d\d:\d\d$/.test(u.silencio.hasta))) throw new Error('silencio: horas no válidas');
+}
+
 function validar(c) {
   const u = c.umbrales;
-  for (const grupo of ['web', 'aviso']) {
-    for (const cat of CATEGORIAS) {
-      if (typeof u?.[grupo]?.[cat] !== 'number') throw new Error(`config: falta umbrales.${grupo}.${cat}`);
-    }
-  }
+  validarUmbrales(u);
   if (!c.http?.user_agent) throw new Error('config: falta http.user_agent');
   for (const [id, f] of Object.entries(c.fuentes ?? {})) {
     if (!f.modulo) throw new Error(`config: la fuente ${id} no tiene "modulo"`);

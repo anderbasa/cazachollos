@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Cazachollos</title>
+    <meta name="description" content="Los chollos y chollazos que va encontrando tu bot" />
+    <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Cazachollos" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/png" href="icons/favicon-64.png" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <link rel="stylesheet" href="css/app.css" />
+    <script type="module" src="js/app.js"></script>
+  </head>
+  <body>
+    <!-- Cargando -->
+    <div id="arranque" class="arranque" aria-live="polite">
+      <img src="icons/icon-192.png" alt="" width="72" height="72" />
+    </div>
+
+    <!-- Entrar -->
+    <section id="login" class="login" hidden>
+      <img class="login-icono" src="icons/icon-192.png" alt="" width="88" height="88" />
+      <h1>Cazachollos</h1>
+      <p class="login-texto">Los chollos que va encontrando tu bot, ordenados para curiosear.</p>
+      <button id="btn-entrar" class="boton-principal" type="button">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.4h6.5a5.6 5.6 0 0 1-2.4 3.7v3h3.9c2.3-2.1 3.5-5.2 3.5-8.8Z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.3v3.1A12 12 0 0 0 12 24Z"/><path fill="#FBBC05" d="M5.3 14.3a7.2 7.2 0 0 1 0-4.6V6.6h-4a12 12 0 0 0 0 10.8l4-3.1Z"/><path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.3 6.6l4 3.1c.9-2.9 3.6-4.9 6.7-4.9Z"/></svg>
+        Entrar con Google
+      </button>
+      <p id="login-error" class="login-error" role="alert" hidden></p>
+    </section>
+
+    <!-- App -->
+    <div id="app" hidden>
+      <header class="cabecera">
+        <div class="cabecera-fila">
+          <h1 id="titulo">Chollos</h1>
+          <div class="cabecera-acciones">
+            <button id="btn-recargar" class="icono" type="button" aria-label="Recargar">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" /></svg>
+            </button>
+            <button id="btn-filtros" class="icono" type="button" aria-label="Filtros">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
+              <span id="num-filtros" class="globo" hidden></span>
+            </button>
+          </div>
+        </div>
+        <div id="controles" class="controles">
+          <div class="segmentado" role="tablist" aria-label="Orden">
+            <button type="button" role="tab" data-modo="mejores">Mejores</button>
+            <button type="button" role="tab" data-modo="ultimos">Últimos</button>
+          </div>
+          <label class="buscador">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+            <input id="buscar" type="search" placeholder="Buscar" autocomplete="off" enterkeyhint="search" />
+          </label>
+          <div id="chips" class="chips" role="group" aria-label="Categorías"></div>
+        </div>
+      </header>
+
+      <main>
+        <section id="vista-lista" class="vista">
+          <p id="resumen" class="resumen"></p>
+          <ul id="lista" class="lista"></ul>
+          <button id="btn-mas" class="boton-secundario" type="button" hidden>Cargar más</button>
+          <div id="vacio" class="vacio" hidden></div>
+        </section>
+        <section id="vista-ajustes" class="vista" hidden></section>
+        <section id="vista-estado" class="vista" hidden></section>
+      </main>
+
+      <nav class="pestanas" aria-label="Secciones">
+        <button type="button" data-pestana="chollos">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12V4h8l10 10-8 8L3 12Z" /><circle cx="7.5" cy="8.5" r="1.5" /></svg>
+          <span>Chollos</span>
+        </button>
+        <button type="button" data-pestana="favoritos">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9L12 3Z" /></svg>
+          <span>Favoritos</span>
+        </button>
+        <button type="button" data-pestana="ajustes">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" /><circle cx="16" cy="7" r="2" /><circle cx="8" cy="17" r="2" /></svg>
+          <span>Ajustes</span>
+        </button>
+        <button type="button" data-pestana="estado">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2-6 4 12 2-6h6" /></svg>
+          <span>Estado</span>
+        </button>
+      </nav>
+
+      <!-- Hoja de filtros -->
+      <dialog id="hoja-filtros" class="hoja" aria-labelledby="hoja-titulo">
+        <form method="dialog" class="hoja-cuerpo">
+          <div class="hoja-asa" aria-hidden="true"></div>
+          <div class="hoja-cabecera">
+            <button id="btn-limpiar-filtros" type="button" class="enlace-texto">Limpiar</button>
+            <h2 id="hoja-titulo">Filtros</h2>
+            <button type="submit" class="enlace-texto fuerte">Listo</button>
+          </div>
+          <div class="grupo">
+            <label class="fila-ajuste"><span>Solo chollazos 🔥</span><input type="checkbox" class="interruptor" data-filtro="soloChollazos" /></label>
+            <label class="fila-ajuste"><span>Solo gratis 🎁</span><input type="checkbox" class="interruptor" data-filtro="soloGratis" /></label>
+            <label class="fila-ajuste"><span>Ver ocultos</span><input type="checkbox" class="interruptor" data-filtro="verOcultos" /></label>
+          </div>
+          <p class="grupo-titulo">Descuento mínimo: <b id="dto-valor">0 %</b></p>
+          <div class="grupo grupo-relleno">
+            <input id="dto-min" type="range" min="0" max="90" step="10" value="0" aria-label="Descuento mínimo" />
+          </div>
+          <p class="grupo-titulo">Fuente</p>
+          <div class="grupo grupo-relleno">
+            <div id="filtro-fuente" class="segmentado"></div>
+          </div>
+        </form>
+      </dialog>
+
+      <div id="toast" class="toast" role="status" hidden></div>
+    </div>
+  </body>
+</html>

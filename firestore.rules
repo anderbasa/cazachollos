@@ -1,0 +1,49 @@
+rules_version = '2';
+
+// Cazachollos · reglas de Firestore
+// - El script entra con su cuenta de servicio (firebase-admin), que no pasa por estas reglas.
+// - La web solo puede leer si has entrado con tu cuenta de Google.
+// - Desde la web solo se puede escribir: favorito y oculto en cada chollo, y los ajustes.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function esAnder() {
+      return request.auth != null
+        && request.auth.uid == '__UID__'
+        && request.auth.token.email == 'anderbasa07@gmail.com';
+    }
+
+    match /deals/{id} {
+      allow read: if esAnder();
+      allow update: if esAnder()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['favorito', 'oculto'])
+        && (!('favorito' in request.resource.data) || request.resource.data.favorito is bool)
+        && (!('oculto' in request.resource.data) || request.resource.data.oculto is bool);
+    }
+
+    match /config/umbrales {
+      allow read, delete: if esAnder();
+      allow create, update: if esAnder()
+        && request.resource.data.keys().hasOnly([
+          'categorias_activas', 'solo_productos_fisicos', 'excluir_recopilaciones', 'bonus_editores',
+          'web', 'web_temperatura_minima', 'aviso', 'votos', 'siempre', 'nunca', 'avisos', 'silencio',
+          'reactivar', 'actualizadoEn'
+        ]);
+    }
+
+    match /estado/{doc} {
+      allow read: if esAnder();
+    }
+    match /ejecuciones/{doc} {
+      allow read: if esAnder();
+    }
+    match /uso/{doc} {
+      allow read: if esAnder();
+    }
+
+    // Todo lo demás: nadie
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -11,7 +11,12 @@
     "dry": "node src/main.js --modo rapido --dry-run",
     "dry:lento": "node src/main.js --modo lento --dry-run",
     "prueba": "node src/main.js --modo prueba --dry-run",
-    "test": "node --test \"test/**/*.test.js\""
+    "test": "node --test \"test/**/*.test.js\"",
+    "reglas": "node scripts/reglas.mjs",
+    "web": "node scripts/servir.mjs",
+    "web:defectos": "node scripts/defectos.mjs",
+    "iconos": "node scripts/iconos.mjs",
+    "recalcular": "node src/main.js --modo recalcular"
   },
   "dependencies": {
     "fast-xml-parser": "^5.12.0",

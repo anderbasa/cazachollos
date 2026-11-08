@@ -26,6 +26,7 @@ export function soloLectura(store) {
     },
     leerUmbrales: () => store.leerUmbrales(),
     leerEstados: (ids) => store.leerEstados(ids),
+    listarDeals: () => store.listarDeals(),
     // Para que reclamarAviso funcione en la sombra, los chollos "creados" se guardan en ella
     async crearDeal(doc) {
       return sombra.crearDeal(doc);

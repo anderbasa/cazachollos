@@ -224,3 +224,35 @@ FIREBASE_SERVICE_ACCOUNT_FILE=.secrets/firebase.json
 
 Así, `npm run dry` lee el estado real de Firestore, sin escribir nada, y te enseña qué avisaría ahora
 mismo de verdad.
+
+---
+
+# Fase 4 · La web
+
+## Paso 7 · Activar el inicio de sesión con Google en Firebase (2 min)
+
+1. Entra en https://console.firebase.google.com → proyecto **cazachollos**.
+2. Menú de la izquierda: **Authentication** (dentro de **Compilación**, de **Build** o de
+   **Seguridad**, según la versión de la consola). Pulsa **Comenzar** si te lo pide.
+3. Pestaña **Método de inicio de sesión** → en la lista, **Google**.
+4. Activa el interruptor **Habilitar**.
+5. **Correo electrónico de asistencia:** elige `anderbasa07@gmail.com`.
+6. Pulsa **Guardar**.
+
+## Paso 8 · Publicar la web en GitHub Pages (2 min)
+
+1. Ve a https://github.com/anderbasa/cazachollos/settings/pages
+2. En **Build and deployment** → **Source**: deja **Deploy from a branch**.
+3. En **Branch**: elige `main` y, al lado, la carpeta **`/docs`**. Pulsa **Save**.
+4. Al cabo de un minuto, la web estará en **https://anderbasa.github.io/cazachollos/**
+
+## Paso 9 · Primera entrada y app en el iPhone
+
+1. En el iPhone, abre **https://anderbasa.github.io/cazachollos/** en **Safari**.
+2. Pulsa **Entrar con Google** y elige `anderbasa07@gmail.com`.
+3. La primera vez, la web dirá que tu cuenta aún no tiene permiso: es normal. Las reglas de la base
+   de datos se cierran con tu número de usuario (UID), y ese número solo existe después de entrar
+   una vez. Desde el PC: `npm run reglas` (o pídemelo). Después recarga la web.
+4. Para tenerla como app: botón **Compartir** (el cuadrado con la flecha) → **Añadir a pantalla de
+   inicio** → **Añadir**. Ábrela desde el icono y vuelve a entrar con Google (la app del icono no
+   comparte la sesión con Safari).

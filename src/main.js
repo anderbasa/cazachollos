@@ -9,7 +9,8 @@
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { cargarConfig } from './config.js';
+import { cargarConfig, umbralesEfectivos } from './config.js';
+import { recalcularGuardados } from './recalcular.js';
 import { anotacionGithub, leerSecretos } from './entorno.js';
 import { crearHttp } from './http.js';
 import { ejecutarModo } from './motor.js';
@@ -17,7 +18,7 @@ import { imprimirInforme } from './report.js';
 import { crearStore } from './store/index.js';
 import { crearTelegram, crearTelegramSimulado } from './telegram.js';
 
-const MODOS = ['rapido', 'lento', 'busqueda', 'limpieza', 'prueba'];
+const MODOS = ['rapido', 'lento', 'busqueda', 'limpieza', 'prueba', 'recalcular'];
 
 const { values } = parseArgs({
   options: {
@@ -52,15 +53,18 @@ async function main() {
   if (!dryRun && secretos.problemas.length) throw new Error(secretos.problemas.join(' · '));
 
   const store = await crearStore({ dryRun, credenciales: secretos.firebase });
-  const telegramReal = crearTelegram({ token: secretos.token, chatId: secretos.chatId });
-  if (!dryRun && !telegramReal) throw new Error('Faltan los secrets TELEGRAM_BOT_TOKEN o TELEGRAM_CHAT_ID.');
 
-  if (modo === 'limpieza') {
-    // La limpieza de verdad (borrar lo de más de 30 días) llega en la fase 6.
-    if (!dryRun) await store.marcarInicio('limpieza', Date.now());
-    log.info('Modo limpieza: de momento solo deja constancia de que se ha ejecutado (fase 6).');
+  if (modo === 'limpieza' || modo === 'recalcular') {
+    // Vuelve a puntuar lo guardado con los ajustes actuales (lo que ya no interesa sale de la web).
+    // Borrar lo de más de 30 días llega en la fase 6.
+    if (!dryRun && modo === 'limpieza') await store.marcarInicio('limpieza', Date.now());
+    const umbrales = umbralesEfectivos(config, await store.leerUmbrales(), log);
+    await recalcularGuardados({ store, config: { ...config, umbrales }, log, dryRun });
     return;
   }
+
+  const telegramReal = crearTelegram({ token: secretos.token, chatId: secretos.chatId });
+  if (!dryRun && !telegramReal) throw new Error('Faltan los secrets TELEGRAM_BOT_TOKEN o TELEGRAM_CHAT_ID.');
 
   const telegram = dryRun ? crearTelegramSimulado() : telegramReal;
   const salida = await ejecutarModo({

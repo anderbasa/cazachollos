@@ -6,7 +6,7 @@
 //   5. Avisos: nunca dos veces el mismo; antispam (10 por ronda, 40 al día), silencio, resumen.
 //   6. Salud de las fuentes: un aviso si fallan 3 veces seguidas, otro al recuperarse.
 //   7. Guarda estado y un registro de la ejecución.
-import { fusionar } from './config.js';
+import { umbralesEfectivos } from './config.js';
 import { mensajeCola, mensajeFuenteDesactivada, mensajeFuenteFalla, mensajeFuenteRecuperada, mensajeResumen, mensajeTope } from './mensajes.js';
 import { esRebaja } from './deal.js';
 import { diaLocal, ejecutar, esUrgente, estaEnSilencio, ordenarAvisos } from './pipeline.js';
@@ -73,6 +73,7 @@ export function docDeDeal(d, ahora, zona, nuevo) {
     puntuacion: d.puntuacion,
     esChollo: d.esChollo,
     esChollazo: d.esChollazo,
+    filtrado: Boolean(d.filtrado),
     motivos: d.motivos,
     bloqueos: d.bloqueos,
     extra: d.extra,
@@ -102,7 +103,7 @@ export async function ejecutarModo(opts) {
 
   // 2 · Umbrales de la web y estado
   const remotos = await store.leerUmbrales();
-  if (remotos) config = { ...config, umbrales: fusionar(config.umbrales, remotos) };
+  if (remotos) config = { ...config, umbrales: umbralesEfectivos(config, remotos, log) };
   const u = config.umbrales;
   const cfgEstado = config.estado ?? {};
   const nombre = (id) => config.fuentes?.[id]?.nombre ?? id;
@@ -113,6 +114,10 @@ export async function ejecutarModo(opts) {
         .filter(([, f]) => f.activa && modosDe(f).includes(modo))
         .map(([id]) => id);
   const estados = await store.leerEstados(ids);
+  // Reactivar desde la web (pantalla Estado): config/umbrales.reactivar.<fuente> = momento en ms
+  const reactivadas = ids.filter((id) => estados[id]?.desactivada && (u.reactivar?.[id] ?? 0) > (estados[id].desactivadaEn ?? 0));
+  for (const id of reactivadas) estados[id] = { ...estados[id], desactivada: false, bloqueosSeguidos: 0, fallosSeguidos: 0, alertaEnviada: false };
+  salida.reactivadas = reactivadas;
   salida.desactivadas = ids.filter((id) => estados[id]?.desactivada);
   const solo = ids.filter((id) => !salida.desactivadas.includes(id));
 
@@ -295,6 +300,7 @@ export async function ejecutarModo(opts) {
     const campos = pf(res.fuente).campos;
     Object.assign(campos, res.cambiosEstado ?? {}); // lo que la fuente quiere recordar (último mensaje leído…)
     campos.ultimaEjecucion = ahora;
+    if (reactivadas.includes(res.fuente)) Object.assign(campos, { desactivada: false, bloqueosSeguidos: 0, alertaEnviada: false });
     if (res.ok) {
       Object.assign(campos, { sembrado: true, ultimaOk: ahora, fallosSeguidos: 0, bloqueosSeguidos: 0, ultimoError: null, fallandoDesde: null });
       if (est.alertaEnviada) {
@@ -307,7 +313,7 @@ export async function ejecutarModo(opts) {
       const desde = est.fallandoDesde ?? ahora;
       Object.assign(campos, { fallosSeguidos: fallos, bloqueosSeguidos: bloqueos, ultimoError: String(res.error).slice(0, 300), ultimoFallo: ahora, fallandoDesde: desde });
       if (bloqueos >= (cfgEstado.desactivar_tras_bloqueos ?? 3)) {
-        Object.assign(campos, { desactivada: true, alertaEnviada: true });
+        Object.assign(campos, { desactivada: true, desactivadaEn: ahora, alertaEnviada: true });
         await avisoSistema(telegram, mensajeFuenteDesactivada(nombre(res.fuente), res.error), salida);
       } else if (fallos >= (cfgEstado.alerta_tras_fallos ?? 3) && !est.alertaEnviada) {
         campos.alertaEnviada = true;

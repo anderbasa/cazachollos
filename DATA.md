@@ -53,6 +53,7 @@ tiene el mismo id. Solo se guardan los chollos que entran en la web (`esChollo`)
 | `avisos` | number | Cuántos mensajes se han enviado de este chollo |
 | `via` | string \| null | Cómo se marcó: `telegram`, `resumen`, `siembra` (primera ejecución, sin aviso), `silencio` (fue al resumen de la mañana), `tope` (se superó el máximo diario) |
 | `extra` | map | Datos propios de la fuente (no estables). Telegram: `canal`, `canales`, `post` (enlace al mensaje), `mensaje`, `parcial` (solo datos del mensaje, sin cruzar con el listado) |
+| `filtrado` | boolean | No pasa los filtros de interés (categoría desactivada, no físico, recopilación): no se enseña en la web |
 | `favorito` | boolean | **Lo escribe la web**, nunca el script |
 | `oculto` | boolean | **Lo escribe la web**, nunca el script |
 
@@ -96,8 +97,10 @@ Una sola escritura por ejecución y fuente.
 
 ## `config/umbrales` — ajustes editables desde la web (fase 4)
 
-Mismo formato que `umbrales:` en `config.yml`. Solo hace falta guardar lo que cambia; el script lo
-mezcla con los valores por defecto en cada ejecución.
+Mismo formato que `umbrales:` en `config.yml` (lo guarda la pantalla Ajustes de la web). El script lo
+mezcla con los valores por defecto en cada ejecución y, si algo no es válido, lo ignora entero.
+Además: `reactivar` (`{ [fuente]: ms }`, botón Reactivar de la pantalla Estado) y `actualizadoEn`.
+La limpieza diaria vuelve a aplicar estos ajustes a los chollos ya guardados (`filtrado`, `esChollo`).
 
 ## Cuotas del plan Spark (estimación diaria)
 
