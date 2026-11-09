@@ -9,6 +9,10 @@ export const UMBRALES = {
   "solo_productos_fisicos": true,
   "excluir_recopilaciones": true,
   "bonus_editores": 10,
+  "perfumes": {
+    "activa": true,
+    "descuento_minimo": 30
+  },
   "web": {
     "tecnologia": 40,
     "videojuegos": 50,
@@ -49,7 +53,8 @@ export const UMBRALES = {
   },
   "nunca": {
     "precio_original_minimo": 15,
-    "locales": true
+    "locales": true,
+    "antiguedad_maxima_horas": 48
   },
   "avisos": {
     "max_por_ejecucion": 10,

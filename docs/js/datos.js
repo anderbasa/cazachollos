@@ -56,6 +56,10 @@ async function datosFirebase() {
     async favoritos() {
       return lista(await F.getDocs(F.query(deals, F.where('favorito', '==', true), F.limit(300))));
     },
+    // Todos los perfumes guardados (el orden y los filtros se aplican en el móvil)
+    async perfumes() {
+      return lista(await F.getDocs(F.query(deals, F.where('etiquetas', 'array-contains', 'PERFUME'), F.limit(400))));
+    },
     marcar: (id, campo, valor) => F.updateDoc(F.doc(db, 'deals', id), { [campo]: valor }),
     async ajustes() {
       const s = await F.getDoc(umbrales);
@@ -92,6 +96,7 @@ async function datosDemo() {
     mejores: async (horas = 48) => ordenados().filter((d) => d.publicadoEn >= copia.exportado - horas * 3600_000),
     ultimos: async (antesDe = null, n = 60) => ordenados().filter((d) => antesDe == null || d.publicadoEn < antesDe).slice(0, n),
     favoritos: async () => ordenados().filter((d) => d.favorito),
+    perfumes: async () => ordenados().filter((d) => d.etiquetas?.includes('PERFUME')),
     marcar: async (id, campo, valor) => {
       deals.get(id)[campo] = valor;
     },

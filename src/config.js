@@ -52,6 +52,7 @@ export function validarUmbrales(u) {
   num(u.avisos?.max_por_dia, 'avisos.max_por_dia', 0, 500);
   num(u.avisos?.max_por_ejecucion, 'avisos.max_por_ejecucion', 0, 100);
   if (u.silencio?.activo && !(/^\d\d:\d\d$/.test(u.silencio.desde) && /^\d\d:\d\d$/.test(u.silencio.hasta))) throw new Error('silencio: horas no válidas');
+  if (u.perfumes != null) num(u.perfumes.descuento_minimo, 'perfumes.descuento_minimo', 0, 100);
 }
 
 function validar(c) {

@@ -1,4 +1,5 @@
 // Utilidades de texto: precios en formato español, claves normalizadas y palabras clave.
+import { etiquetasPerfume } from './perfumes.js';
 
 /** "1.234,56 €" → 1234.56 · "54,90€" → 54.9 · "19.99€" → 19.99 · "GRATIS" → null */
 export function parsePrecio(texto) {
@@ -103,11 +104,12 @@ export function detectarPalabras(...textos) {
   return etiquetas;
 }
 
-/** Etiquetas de "qué es": DIGITAL (no físico) y RECOPILACION. Solo mira el título. */
+/** Etiquetas de "qué es": DIGITAL (no físico), RECOPILACION y PERFUME (+ su tipo). Solo mira el título. */
 export function detectarTipo(titulo) {
   const etiquetas = new Set();
   if (RE_DIGITAL.test(titulo)) etiquetas.add('DIGITAL');
   if (RE_RECOPILACION.test(titulo)) etiquetas.add('RECOPILACION');
+  for (const e of etiquetasPerfume(titulo)) etiquetas.add(e);
   return etiquetas;
 }
 

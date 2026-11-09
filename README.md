@@ -93,6 +93,6 @@ de `crearDeal({...})`, y añade una entrada en `fuentes:` de `config.yml`.
 1. ✅ Base: estructura, config, modelo, puntuador y Chollometro en dry-run
 2. ✅ Avisos: Firestore, bot de Telegram, deduplicación, GitHub Actions y cron-job.org (en marcha desde el 7/11/2026)
 3. ✅ Más fuentes: 5 canales de Telegram (@chollos, @descuentos, @chollometro, @canaldechollos, @gangagato). GamerPower descartado: solo trae videojuegos
-4. ✅ Web (PWA): login con Google, Mejores/Últimos/Favoritos, filtros, ajustes y estado → https://anderbasa.github.io/cazachollos/
+4. ✅ Web (PWA): login con Google, Mejores/Últimos/Favoritos, sección Perfumes (diseñador, nicho, árabes; desde -30 % o muy votados), filtros, ajustes y estado → https://anderbasa.github.io/cazachollos/
 5. Búsquedas web: Tavily con límites duros
 6. Pulido: limpieza diaria, alertas de fallo y guía completa

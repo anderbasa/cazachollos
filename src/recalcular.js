@@ -6,7 +6,7 @@ import { mapearCategoria } from './config.js';
 import { puntuar } from './scorer.js';
 import { detectarTipo, normalizarClave } from './text.js';
 
-const ETIQUETAS_TIPO = ['DIGITAL', 'NO_FISICO', 'CUPON', 'RECOPILACION'];
+const ETIQUETAS_TIPO = ['DIGITAL', 'NO_FISICO', 'CUPON', 'RECOPILACION', 'PERFUME', 'PERFUME_DISENADOR', 'PERFUME_NICHO', 'PERFUME_ARABE', 'PERFUME_OTRO'];
 
 export function recalcularDoc(doc, config, ahora = Date.now()) {
   const etiquetas = new Set((doc.etiquetas ?? []).filter((e) => !ETIQUETAS_TIPO.includes(e)));

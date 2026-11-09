@@ -41,7 +41,7 @@ tiene el mismo id. Solo se guardan los chollos que entran en la web (`esChollo`)
 | `local` | boolean | Solo en tiendas físicas o zonas concretas |
 | `verificado` | boolean | Datos de una fuente fiable (Chollometro, GamerPower) |
 | `gratis` | boolean | Precio 0 verificado (no cuenta "gratis con compra" ni pruebas) |
-| `etiquetas` | string[] | `ERROR_DE_PRECIO`, `GRATIS` (palabra clave), `SIN_VERIFICAR`, `CADUCADO`, `LOCAL`, `CON_COMPRA`, `PRUEBA`, `REGALO`, `CIEN_POR_CIEN`, `JUEGO_COMPLETO`, y de tipo: `DIGITAL` (plugins, apps, cursos, suscripciones…), `NO_FISICO` (servicios, viajes, tarifas), `CUPON` (cupón genérico de tienda), `RECOPILACION` (lista de varios productos); y de canales: `EN_TELEGRAM` (salió en un canal), `EDITORES` (lo eligieron @chollos o @descuentos: +10 puntos) |
+| `etiquetas` | string[] | `ERROR_DE_PRECIO`, `GRATIS` (palabra clave), `SIN_VERIFICAR`, `CADUCADO`, `LOCAL`, `CON_COMPRA`, `PRUEBA`, `REGALO`, `CIEN_POR_CIEN`, `JUEGO_COMPLETO`, y de tipo: `DIGITAL` (plugins, apps, cursos, suscripciones…), `NO_FISICO` (servicios, viajes, tarifas), `CUPON` (cupón genérico de tienda), `RECOPILACION` (lista de varios productos); y de perfumes: `PERFUME` + `PERFUME_DISENADOR` / `PERFUME_NICHO` / `PERFUME_ARABE` / `PERFUME_OTRO` (sección Perfumes de la web); y de canales: `EN_TELEGRAM` (salió en un canal), `EDITORES` (lo eligieron @chollos o @descuentos: +10 puntos) |
 | `puntuacion` | number | 0–100, para ordenar "Mejores" |
 | `esChollo` | boolean | Cumple las reglas de la web |
 | `esChollazo` | boolean | Cumple las reglas de aviso |

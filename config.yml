@@ -25,6 +25,13 @@ umbrales:
   # Puntos extra (de 100) si lo publican los editores de @chollos o @descuentos
   bonus_editores: 10
 
+  # Sección de perfumes de la web (diseñador, nicho, árabes…). En perfumes las rebajas reales son
+  # más pequeñas, así que entran con menos descuento (o si están muy votados, ≥ web_temperatura_minima).
+  # Los avisos por Telegram siguen las reglas normales de su categoría.
+  perfumes:
+    activa: true
+    descuento_minimo: 30
+
   # Descuento mínimo (%) para entrar en la web, calculado con precio + envío.
   # Moda y otros estaban en 60 y 70 en el documento; se bajan a 50 para que nada
   # pueda avisar por Telegram sin aparecer en la web.
@@ -66,6 +73,7 @@ umbrales:
   nunca:
     precio_original_minimo: 15 # € (evita "-90 % en un cable de 2 €")
     locales: true # chollos solo en tiendas físicas o zonas concretas
+    antiguedad_maxima_horas: 48 # lo publicado hace más tiempo ya no es "de última hora"
 
   # Antispam
   avisos:
@@ -150,6 +158,11 @@ fuentes:
         modos: [lento]
         html: https://www.chollometro.com/categorias/gratis
         rss: https://www.chollometro.com/rss/categorias/gratis
+      # Los perfumes más votados de las últimas semanas (para la sección Perfumes)
+      - nombre: perfumes
+        modos: [lento]
+        html: https://www.chollometro.com/categorias/perfumes
+        rss: https://www.chollometro.com/rss/categorias/perfumes
 
   # Plantilla para otra web española de chollos con RSS (desactivada; comprueba la URL antes):
   # otra-web:

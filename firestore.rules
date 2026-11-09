@@ -25,7 +25,7 @@ service cloud.firestore {
       allow read, delete: if esAnder();
       allow create, update: if esAnder()
         && request.resource.data.keys().hasOnly([
-          'categorias_activas', 'solo_productos_fisicos', 'excluir_recopilaciones', 'bonus_editores',
+          'categorias_activas', 'solo_productos_fisicos', 'excluir_recopilaciones', 'bonus_editores', 'perfumes',
           'web', 'web_temperatura_minima', 'aviso', 'votos', 'siempre', 'nunca', 'avisos', 'silencio',
           'reactivar', 'actualizadoEn'
         ]);

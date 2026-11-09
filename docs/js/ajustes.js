@@ -25,6 +25,12 @@ export function pintarAjustes(el, { datos, remotos, alGuardar, aviso }) {
         <label class="fila-ajuste"><span>Quitar recopilaciones<small>"Recopilación de… desde 7,99 €"</small></span>${sw('excluir_recopilaciones', u.excluir_recopilaciones)}</label>
       </div>
 
+      <p class="grupo-titulo">Perfumes</p>
+      <div class="grupo">
+        <label class="fila-ajuste"><span>Sección de perfumes<small>Diseñador, nicho, árabes…</small></span>${sw('perfumes.activa', u.perfumes?.activa)}</label>
+        <div class="fila-ajuste"><span>Entran con descuento de al menos<small>O si están muy votados</small></span>${num('perfumes.descuento_minimo', u.perfumes?.descuento_minimo ?? 30, { sufijo: '%' })}</div>
+      </div>
+
       <p class="grupo-titulo">Descuento mínimo por categoría</p>
       <div class="grupo">
         <div class="fila-ajuste cabeza"><span></span><span class="col">Web</span><span class="col">Aviso</span></div>
@@ -112,6 +118,7 @@ function leerFormulario(form, base) {
     nunca: base.nunca,
     avisos: base.avisos,
     silencio: base.silencio,
+    perfumes: base.perfumes ?? { activa: true, descuento_minimo: 30 },
   });
   u.categorias_activas = [...form.querySelectorAll('[data-cat]')].filter((i) => i.checked).map((i) => i.dataset.cat);
   if (u.categorias_activas.length === 0) throw new Error('Deja al menos una categoría activa.');

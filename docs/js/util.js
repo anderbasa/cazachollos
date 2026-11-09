@@ -23,6 +23,14 @@ export function horaCorta(ms) {
   return new Date(ms).toLocaleString('es-ES', { timeZone: 'Europe/Madrid', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
+/** Mililitros de un perfume en el título ("100ml", "125 ML"), o null. Igual que src/perfumes.js. */
+export function mililitros(titulo) {
+  const m = String(titulo ?? '').match(/(\d{1,4}(?:[.,]\d)?)\s?ml\b/i);
+  if (!m) return null;
+  const n = Number(m[1].replace(',', '.'));
+  return n >= 5 && n <= 1000 ? n : null;
+}
+
 /** Sin tildes y en minúsculas, para buscar. */
 export const normalizar = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 

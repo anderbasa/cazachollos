@@ -33,9 +33,12 @@ export function puntuar(deal, u, ahora = Date.now()) {
   const votos = porTemperatura || porVelocidad;
   const textoVotos = porTemperatura ? `${Math.round(T)}°` : porVelocidad ? `${velocidad.toFixed(1)}°/min` : '';
 
+  // Perfumes: tienen su propia sección en la web, con un mínimo de descuento más bajo
+  const esPerfume = tags.has('PERFUME') && Boolean(u.perfumes?.activa);
+
   // 0 · Filtros de interés
   const filtros = [];
-  if (u.categorias_activas && !u.categorias_activas.includes(cat)) filtros.push(`categoría ${cat} desactivada`);
+  if (u.categorias_activas && !u.categorias_activas.includes(cat) && !esPerfume) filtros.push(`categoría ${cat} desactivada`);
   if (u.solo_productos_fisicos) {
     if (tags.has('DIGITAL')) filtros.push('no es un producto físico (digital)');
     else if (tags.has('NO_FISICO')) filtros.push('no es un producto físico (servicio, viaje o tarifa)');
@@ -49,6 +52,9 @@ export function puntuar(deal, u, ahora = Date.now()) {
   if (u.nunca.locales && deal.local) bloqueos.push('solo en tiendas físicas o zonas concretas');
   if (!deal.verificado && !deal.fiable) bloqueos.push('sin verificar y la fuente no es fiable');
   if (deal.precio == null && !errorPrecio) bloqueos.push('sin precio');
+  // Lo publicado hace días ya no es "de última hora" (y evita avisos en bloque al añadir un listado)
+  const maxHoras = u.nunca.antiguedad_maxima_horas;
+  if (maxHoras && edadMin != null && edadMin > maxHoras * 60) bloqueos.push(`publicado hace más de ${maxHoras} h`);
   const minimo = u.nunca.precio_original_minimo;
   if (deal.precioAnterior != null && deal.precioAnterior < minimo && !(juegoCompleto && u.siempre.juegos_gratis)) {
     bloqueos.push(`precio original menor de ${minimo} €`);
@@ -82,7 +88,7 @@ export function puntuar(deal, u, ahora = Date.now()) {
 
   const esChollazo = bloqueos.length === 0 && motivos.length > 0;
 
-  const umbralWeb = Math.min(u.web[cat] ?? u.web.otros, umbralAviso);
+  const umbralWeb = Math.min(u.web[cat] ?? u.web.otros, umbralAviso, esPerfume ? (u.perfumes.descuento_minimo ?? 30) : Infinity);
   const esChollo =
     !filtrado &&
     (esChollazo ||

@@ -315,6 +315,13 @@ svg {
   background: var(--texto);
   color: var(--fondo);
 }
+.chip small {
+  margin-left: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.55;
+  font-variant-numeric: tabular-nums;
+}
 
 /* Contenido */
 main {
@@ -470,6 +477,22 @@ main {
 .tag.sinver {
   background: var(--ambar-suave);
   color: var(--ambar);
+}
+.tag.perfume {
+  background: rgba(175, 82, 222, 0.14);
+  color: #8e3ab8;
+}
+@media (prefers-color-scheme: dark) {
+  .tag.perfume {
+    background: rgba(191, 90, 242, 0.2);
+    color: #d49cf5;
+  }
+}
+.meta.perfume {
+  color: var(--texto);
+}
+.meta.perfume b {
+  font-weight: 600;
 }
 .caducada .fila-enlace {
   opacity: 0.5;

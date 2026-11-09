@@ -1,7 +1,7 @@
 // Service worker: la app abre al instante (y sin conexión) con lo último que se descargó.
 // Los datos no pasan por aquí: los gestiona Firestore con su propia caché.
 // Al publicar cambios en la web, sube la versión para que el iPhone coja los archivos nuevos.
-const VERSION = 'cazachollos-v1';
+const VERSION = 'cazachollos-v2';
 const APP = ['./', 'index.html', 'css/app.css', 'js/app.js', 'js/datos.js', 'js/util.js', 'js/config.js', 'js/defectos.js', 'js/ajustes.js', 'js/estado.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/apple-touch-icon.png', 'icons/favicon-64.png'];
 
 self.addEventListener('install', (e) => {
